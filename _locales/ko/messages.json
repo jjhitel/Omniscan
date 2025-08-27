@@ -1,0 +1,33 @@
+{
+    "appDesc": {
+        "message": "주소창에서 키워드를 사용해 여러 블록체인 익스플로러를 검색합니다."
+    },
+    "omniboxDefaultSuggestion": {
+        "message": "체인 티커와 주소를 입력하세요. (예: eth 0x...)"
+    },
+    "omniboxSuggestionDescription": {
+        "message": "$engineName$에서 '$query$' 검색",
+        "placeholders": {
+            "engineName": {
+                "content": "$1",
+                "example": "Etherscan"
+            },
+            "query": {
+                "content": "$2",
+                "example": "0x..."
+            }
+        }
+    },
+    "popupDescription": {
+        "message": "주소창에 <code>scan</code>를 입력 후,<br>체인 티커와 주소를 입력하세요."
+    },
+    "popupExample": {
+        "message": "예:"
+    },
+    "dropdownTitle": {
+        "message": "지원하는 전체 목록 보기"
+    },
+    "searchInputPlaceholder": {
+        "message": "티커 또는 이름으로 검색..."
+    }
+}

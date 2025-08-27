@@ -1,0 +1,39 @@
+{
+    "appName": {
+        "message": "Omniscan"
+    },
+    "appDesc": {
+        "message": "Search various blockchain explorers from the address bar using keywords."
+    },
+    "omniboxDefaultSuggestion": {
+        "message": "Enter a chain ticker and an address. (e.g., eth 0x...)"
+    },
+    "omniboxSuggestionDescription": {
+        "message": "Search for '$query$' on $engineName$",
+        "placeholders": {
+            "engineName": {
+                "content": "$1",
+                "example": "Etherscan"
+            },
+            "query": {
+                "content": "$2",
+                "example": "0x..."
+            }
+        }
+    },
+    "popupTitle": {
+        "message": "Omniscan"
+    },
+    "popupDescription": {
+        "message": "Type <code>scan</code> in the address bar, <br>then a chain ticker and an address."
+    },
+    "popupExample": {
+        "message": "Example:"
+    },
+    "dropdownTitle": {
+        "message": "View all supported explorers"
+    },
+    "searchInputPlaceholder": {
+        "message": "Search by ticker or name..."
+    }
+}
