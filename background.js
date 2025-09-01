@@ -1,6 +1,7 @@
 // background.js
 
 let SEARCH_ENGINES = {};
+let FAVORITE_ENGINES = new Set();
 
 /**
  * Loads the search engine configuration from engines.json.
@@ -17,16 +18,12 @@ async function loadEngines() {
         for (const engine of data) {
             // Validate required fields and URL placeholder.
             if (!engine.key || !engine.name || !engine.url) {
-                console.warn(
-                    "Omniscan: Skipping invalid engine entry missing required fields:",
-                    engine);
+                console.warn("Omniscan: Skipping invalid engine entry missing required fields:", engine);
                 continue;
             }
 
             if (!engine.url.includes('%s')) {
-                console.warn(
-                    "Omniscan: Skipping engine with invalid URL (missing %s placeholder):",
-                    engine);
+                console.warn("Omniscan: Skipping engine with invalid URL (missing %s placeholder):", engine);
                 continue;
             }
 
@@ -46,9 +43,44 @@ async function loadEngines() {
     }
 }
 
-// Load engines on install or startup.
-chrome.runtime.onInstalled.addListener(loadEngines);
-chrome.runtime.onStartup.addListener(loadEngines);
+/**
+ * Load favorites from chrome.storage.
+ */
+const loadFavorites = async() => {
+    if (!chrome.storage || !chrome.storage.local) {
+        console.error("Omniscan: Storage API is not available.");
+        return;
+    }
+    const result = await chrome.storage.local.get(['favorites']);
+    if (result.favorites) {
+        FAVORITE_ENGINES = new Set(result.favorites);
+    }
+};
+
+// --- Initial Loading ---
+(async() => {
+    await loadEngines();
+    await loadFavorites();
+})();
+
+// --- Event Listeners ---
+
+// Listen for changes in storage to keep favorites up-to-date.
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.favorites) {
+        FAVORITE_ENGINES = new Set(changes.favorites.newValue || []);
+        console.log("Omniscan: Favorites updated in background.");
+    }
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+    loadEngines();
+    loadFavorites();
+});
+chrome.runtime.onStartup.addListener(() => {
+    loadEngines();
+    loadFavorites();
+});
 
 // --- Omnibox Event Listeners ---
 
@@ -63,36 +95,56 @@ chrome.omnibox.onInputChanged.addListener(async(text, suggest) => {
     if (Object.keys(SEARCH_ENGINES).length === 0) {
         await loadEngines();
     }
+    if (FAVORITE_ENGINES.size === 0) {
+        await loadFavorites();
+    }
 
-    const args = text.trim().split(/\s+/);
-    const suggestions = [];
+    const trimmedText = text.trim();
+    let suggestions = [];
 
-    if (!args[0]) {
-        suggest([]);
+    // Case 0: User just typed "scan" and a space. Show favorites.
+    if (trimmedText === '') {
+        if (FAVORITE_ENGINES.size > 0) {
+            FAVORITE_ENGINES.forEach(key => {
+                if (SEARCH_ENGINES[key]) {
+                    const engine = SEARCH_ENGINES[key];
+                    suggestions.push({
+                        content: `${key} `,
+                        description: `★ Search <match>${key}</match> (<dim>${engine.name}</dim>)`
+                    });
+                }
+            });
+        }
+        suggest(suggestions);
         return;
     }
 
-    const firstArg = args[0];
-    const lowerCaseFirstArg = firstArg.toLowerCase();
+    const args = trimmedText.split(/\s+/);
+    const lowerCaseFirstArg = args[0].toLowerCase();
 
     // Case 1: "scan <known_ticker> <address_part...>"
     if (args.length >= 2 && SEARCH_ENGINES[lowerCaseFirstArg]) {
         const engine = SEARCH_ENGINES[lowerCaseFirstArg];
         const queryPart = args.slice(1).join(' ');
+        const isFavorited = FAVORITE_ENGINES.has(lowerCaseFirstArg);
+        const description = chrome.i18n.getMessage("omniboxSuggestionDescription", [engine.name, queryPart]);
+
         suggestions.push({
             content: text,
-            description: chrome.i18n.getMessage("omniboxSuggestionDescription", [engine.name, queryPart])
+            description: (isFavorited ? '★ ' : '') + description
         });
     }
     // Case 2: User is typing a single argument (ticker or name).
     else if (args.length === 1) {
         // Subcase 2.1: It could be an address for Debank.
-        if (firstArg.length >= 8) {
+        if (lowerCaseFirstArg.length >= 8) {
             const debankEngine = SEARCH_ENGINES['deb'];
             if (debankEngine) {
+                const isFavorited = FAVORITE_ENGINES.has('deb');
+                const description = chrome.i18n.getMessage("omniboxSuggestionDescription", [debankEngine.name, lowerCaseFirstArg]);
                 suggestions.push({
                     content: text,
-                    description: chrome.i18n.getMessage("omniboxSuggestionDescription", [debankEngine.name, firstArg])
+                    description: (isFavorited ? '★ ' : '') + description
                 });
             }
         }
@@ -103,12 +155,23 @@ chrome.omnibox.onInputChanged.addListener(async(text, suggest) => {
                 key.startsWith(lowerCaseFirstArg) ||
                 engine.name.toLowerCase().includes(lowerCaseFirstArg));
 
+        const favoriteSuggestions = [];
+        const otherSuggestions = [];
+
         matchingEngines.forEach(([key, engine]) => {
-            suggestions.push({
+            const suggestion = {
                 content: `${key} `, // Set content to the ticker for the next step
                 description: `Search <match>${key}</match> (<dim>${engine.name}</dim>)`
-            });
+            };
+            if (FAVORITE_ENGINES.has(key)) {
+                suggestion.description = `★ ${suggestion.description}`;
+                favoriteSuggestions.push(suggestion);
+            } else {
+                otherSuggestions.push(suggestion);
+            }
         });
+
+        suggestions.push(...favoriteSuggestions, ...otherSuggestions);
     }
 
     suggest(suggestions);
@@ -118,7 +181,9 @@ chrome.omnibox.onInputChanged.addListener(async(text, suggest) => {
  * Handles the final search when the user presses Enter.
  */
 chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
-    await loadEngines();
+    if (Object.keys(SEARCH_ENGINES).length === 0) {
+        await loadEngines();
+    }
 
     const args = text.trim().split(/\s+/).filter(p => p.length > 0);
 
