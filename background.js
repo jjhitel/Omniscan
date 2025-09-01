@@ -16,7 +16,8 @@ async function loadEngines() {
         const engineMap = new Map();
         for (const engine of data) {
             if (!engineMap.has(engine.key)) {
-                engineMap.set(engine.key, {
+                // Store tickers in lowercase for case-insensitive matching.
+                engineMap.set(engine.key.toLowerCase(), {
                     name: engine.name,
                     url: engine.url
                 });
@@ -59,8 +60,8 @@ chrome.omnibox.onInputChanged.addListener(async(text, suggest) => {
     const lowerCaseFirstArg = firstArg.toLowerCase();
 
     // Case 1: "scan <known_ticker> <address_part...>"
-    if (args.length >= 2 && SEARCH_ENGINES[firstArg]) {
-        const engine = SEARCH_ENGINES[firstArg];
+    if (args.length >= 2 && SEARCH_ENGINES[lowerCaseFirstArg]) {
+        const engine = SEARCH_ENGINES[lowerCaseFirstArg];
         const queryPart = args.slice(1).join(' ');
         suggestions.push({
             content: text,
@@ -111,20 +112,47 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     let ticker;
     let query;
 
-    const potentialTicker = args[0];
+    // Requirement 0: Make search case-insensitive.
+    const potentialTicker = args[0].toLowerCase();
 
-    // Case 1: "scan <known_ticker> <address...>"
-    if (args.length >= 2 && SEARCH_ENGINES[potentialTicker]) {
-        ticker = potentialTicker;
-        query = args.slice(1).join(' ');
+    // Case 1: "scan <ticker/name> <address...>"
+    if (args.length >= 2) {
+        const potentialQuery = args.slice(1).join(' ');
+
+        // First, check for an exact ticker match.
+        if (SEARCH_ENGINES[potentialTicker]) {
+            ticker = potentialTicker;
+        } else {
+            // If no exact match, search for a unique partial or name match.
+            const matchingEngines = Object.entries(SEARCH_ENGINES).filter(([key, engine]) => {
+                const lowerName = engine.name.toLowerCase();
+                const lowerNameNoSpace = lowerName.replace(/\s+/g, '');
+
+                // Requirement 1: Match full name without spaces.
+                if (lowerNameNoSpace === potentialTicker)
+                    return true;
+                // Requirement 2: Match partial ticker or name.
+                if (key.includes(potentialTicker) || lowerName.includes(potentialTicker))
+                    return true;
+
+                return false;
+            });
+
+            // If there's only one unique result, set it as the ticker.
+            if (matchingEngines.length === 1) {
+                ticker = matchingEngines[0][0];
+            }
+        }
+        query = potentialQuery;
     }
     // Case 2: "scan <address>" (defaults to debank)
     else if (args.length === 1) {
         ticker = 'deb';
         query = args[0];
     }
-    // If no pattern matches, do nothing.
-    else {
+
+    // If no matching engine is found, do nothing.
+    if (!ticker) {
         return;
     }
 
