@@ -159,7 +159,13 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     const engine = SEARCH_ENGINES[ticker];
 
     if (engine && query) {
-        const searchUrl = engine.url.replace('%s', encodeURIComponent(query));
+        let searchUrl = engine.url.replace('%s', encodeURIComponent(query));
+
+        // Add URL protocol validation as a defense-in-depth measure
+        if (!searchUrl.startsWith('https:') && !searchUrl.startsWith('http:')) {
+            console.error(`Omniscan: Blocked potentially unsafe URL: ${searchUrl}`);
+            return; // Abort navigation
+        }
 
         const tabProperties = {
             url: searchUrl
