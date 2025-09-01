@@ -132,15 +132,41 @@ document.addEventListener('DOMContentLoaded', async() => {
     // 1. Localize UI text
     document.getElementById('popupTitle').innerText = "Omniscan";
 
-    // Safely construct the description to avoid innerHTML issues
+    // Safely construct the description and handle <br> tags
     const descriptionMsg = chrome.i18n.getMessage("popupDescription");
-    const descriptionParts = descriptionMsg.split(/<code>|<\/code>/);
     const descriptionElement = document.getElementById('popupDescription');
-    descriptionElement.textContent = descriptionParts[0];
-    const codeTag = document.createElement('code');
-    codeTag.textContent = 'scan';
-    descriptionElement.appendChild(codeTag);
-    descriptionElement.append(descriptionParts[2]);
+    descriptionElement.innerHTML = ''; // Clear existing content
+
+    const mainParts = descriptionMsg.split(/<code>|<\/code>/);
+
+    // Part before <code>
+    const beforeCode = mainParts[0];
+    const brPartsBefore = beforeCode.split(/<br>/i);
+    brPartsBefore.forEach((part, index) => {
+        descriptionElement.append(part);
+        if (index < brPartsBefore.length - 1) {
+            descriptionElement.appendChild(document.createElement('br'));
+        }
+    });
+
+    // The <code> part
+    if (mainParts.length > 1) {
+        const codeTag = document.createElement('code');
+        codeTag.textContent = 'scan'; // Assuming it's always 'scan'
+        descriptionElement.appendChild(codeTag);
+    }
+
+    // Part after </code>
+    if (mainParts.length > 2) {
+        const afterCode = mainParts[2];
+        const brPartsAfter = afterCode.split(/<br>/i);
+        brPartsAfter.forEach((part, index) => {
+            descriptionElement.append(part);
+            if (index < brPartsAfter.length - 1) {
+                descriptionElement.appendChild(document.createElement('br'));
+            }
+        });
+    }
 
     document.getElementById('popupExample').innerText = chrome.i18n.getMessage("popupExample");
     searchInputElement.placeholder = chrome.i18n.getMessage("searchInputPlaceholder");
