@@ -1,0 +1,28 @@
+name: CI
+
+# Define when this workflow will run.
+on:
+  push:
+    branches: [ "main" ] # Runs on push events to the main branch
+  pull_request:
+    branches: [ "main" ] # Runs on pull requests targeting the main branch
+
+jobs:
+  lint-and-test:
+    # Define the environment for the job to run on.
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the source code.
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up the Node.js environment.
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Specify your desired Node.js version
+
+      # 3. Run the validation script.
+      - name: Validate engines.json
+        run: npm test # Executes the 'test' script defined in package.json
