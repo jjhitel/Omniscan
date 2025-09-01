@@ -3,8 +3,12 @@
     "version": "1.0",
     "description": "Search various blockchain explorers from the address bar.",
     "scripts": {
-        "test": "node scripts/validate-engines.js"
+        "test": "node scripts/validate-engines.js",
+        "build": "node scripts/build.js"
     },
     "author": "",
-    "license": "GPL-3.0-or-later"
+    "license": "GPL-3.0-or-later",
+    "devDependencies": {
+        "archiver": "^7.0.1"
+    }
 }
