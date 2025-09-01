@@ -15,9 +15,25 @@ async function loadEngines() {
         const data = await response.json();
         const engineMap = new Map();
         for (const engine of data) {
-            if (!engineMap.has(engine.key)) {
+            // Validate required fields and URL placeholder.
+            if (!engine.key || !engine.name || !engine.url) {
+                console.warn(
+                    "Omniscan: Skipping invalid engine entry missing required fields:",
+                    engine);
+                continue;
+            }
+
+            if (!engine.url.includes('%s')) {
+                console.warn(
+                    "Omniscan: Skipping engine with invalid URL (missing %s placeholder):",
+                    engine);
+                continue;
+            }
+
+            const key = engine.key.toLowerCase();
+            if (!engineMap.has(key)) {
                 // Store tickers in lowercase for case-insensitive matching.
-                engineMap.set(engine.key.toLowerCase(), {
+                engineMap.set(key, {
                     name: engine.name,
                     url: engine.url
                 });
