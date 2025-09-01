@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     renderEngineList(allEngines);
 
     // 4. Set up event listener
-    searchInputElement.addEventListener('keyup', (event) => {
+    searchInputElement.addEventListener('input', (event) => {
         const searchTerm = event.target.value.toLowerCase().trim();
         const filteredEngines = allEngines.filter(engine =>
                 engine.key.toLowerCase().includes(searchTerm) ||
