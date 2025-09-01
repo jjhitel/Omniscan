@@ -4,10 +4,32 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const DIST_DIR = path.join(__dirname, '..', 'dist');
-const ZIP_PATH = path.join(DIST_DIR, 'omniscan.zip');
+// --- Start of new/modified code ---
+// Read package.json to get the version
+const packageJson = require('../package.json');
+const version = packageJson.version;
 
-console.log('Starting the build process...');
+if (!version) {
+    console.error("❌ Version not found in package.json. Please add a 'version' field.");
+    process.exit(1);
+}
+
+// Read manifest.json, update its version, and write it back to the file system
+const manifestPath = path.join(__dirname, '..', 'manifest.json');
+const manifestJson = require(manifestPath);
+
+// Update the version only if it's different to avoid unnecessary file writes
+if (manifestJson.version !== version) {
+    console.log(`Updating manifest.json version from ${manifestJson.version} to ${version}...`);
+    manifestJson.version = version;
+    fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, 4), 'utf8');
+}
+// --- End of new/modified code ---
+
+const DIST_DIR = path.join(__dirname, '..', 'dist');
+const ZIP_PATH = path.join(DIST_DIR, `omniscan-v${version}.zip`); // Add version to the zip file name
+
+console.log(`Starting the build process for version ${version}...`);
 
 // 1. Ensure the output directory is clean and exists.
 if (fs.existsSync(DIST_DIR)) {
