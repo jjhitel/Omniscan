@@ -12,6 +12,8 @@
   --list-border-color: #eee;
   --list-hover-bg-color: #eef;
   --scrollbar-thumb-color: #ccc;
+  --favorite-star-color: #ccc;
+  --favorited-star-color: #f6d00a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +30,8 @@
     --list-border-color: #4a4a4a;
     --list-hover-bg-color: #505050;
     --scrollbar-thumb-color: #666;
+    --favorite-star-color: #666;
+    --favorited-star-color: #f6d00a;
   }
 }
 
@@ -122,7 +126,6 @@ li {
   padding: 8px 15px; /* Adjust padding */
   border-bottom: 1px solid var(--list-border-color);
   transition: background-color 0.2s ease-in-out;
-  cursor: pointer;
 }
 
 li:last-child {
@@ -138,7 +141,28 @@ li code {
   font-weight: bold;
 }
 
+.engine-details {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
 .engine-name {
   color: var(--header-color);
   font-weight: 500;
+}
+
+.favorite-star {
+    margin-left: auto;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    color: var(--favorite-star-color);
+    transition: color 0.2s;
+}
+
+.favorite-star.favorited {
+    color: var(--favorited-star-color);
 }
