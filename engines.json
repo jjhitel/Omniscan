@@ -21,7 +21,7 @@
     }, {
         "key": "sol",
         "name": "Solana",
-        "url": "https://solscan.io/search?query=%s"
+        "url": "https://solscan.io/account/%s"
     }, {
         "key": "ada",
         "name": "Cardano",
