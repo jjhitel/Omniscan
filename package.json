@@ -1,6 +1,6 @@
 {
     "name": "omniscan",
-    "version": "1.0",
+    "version": "1.0.1",
     "description": "Search various blockchain explorers from the address bar.",
     "scripts": {
         "test": "node scripts/validate-engines.js",
