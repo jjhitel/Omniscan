@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     };
 
     const renderEngineList = (enginesToRender) => {
-        const fullList = enginesToRender.sort((a, b) => a.key.localeCompare(b.key));
+        const fullList = enginesToRender;
 
         const searchTerm = searchInputElement.value.toLowerCase().trim();
         const filteredList = searchTerm ?
