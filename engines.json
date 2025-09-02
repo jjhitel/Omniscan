@@ -85,7 +85,7 @@
     }, {
         "key": "atom",
         "name": "Cosmos Hub",
-        "url": "https://www.mintscan.io/cosmos/search?q=%s"
+        "url": "https://www.mintscan.io/cosmos/address-estimation/%s"
     }, {
         "key": "icp",
         "name": "Internet Computer",
@@ -121,7 +121,7 @@
     }, {
         "key": "rune",
         "name": "THORChain",
-        "url": "https://www.mintscan.io/thorchain/search?q=%s"
+        "url": "https://www.mintscan.io/thorchain/address-estimation/%s"
     }, {
         "key": "xch",
         "name": "Chia",
@@ -137,11 +137,11 @@
     }, {
         "key": "tia",
         "name": "Celestia",
-        "url": "https://www.mintscan.io/celestia/search?q=%s"
+        "url": "https://www.mintscan.io/celestia/address-estimation/%s"
     }, {
         "key": "sei",
         "name": "Sei",
-        "url": "https://www.mintscan.io/sei/search?q=%s"
+        "url": "https://www.mintscan.io/sei/address-estimation/%s"
     }, {
         "key": "egld",
         "name": "MultiversX (Elrond)",
@@ -149,19 +149,19 @@
     }, {
         "key": "inj",
         "name": "Injective",
-        "url": "https://www.mintscan.io/injective/search?q=%s"
+        "url": "https://www.mintscan.io/injective/address-estimation/%s"
     }, {
         "key": "osmo",
         "name": "Osmosis",
-        "url": "https://www.mintscan.io/osmosis/search?q=%s"
+        "url": "https://www.mintscan.io/osmosis/address-estimation/%s"
     }, {
         "key": "kava",
         "name": "Kava",
-        "url": "https://www.mintscan.io/kava/search?q=%s"
+        "url": "https://www.mintscan.io/kava/address-estimation/%s"
     }, {
         "key": "akt",
         "name": "Akash Network",
-        "url": "https://www.mintscan.io/akash/search?q=%s"
+        "url": "https://www.mintscan.io/akash/address-estimation/%s"
     }, {
         "key": "xdc",
         "name": "XDC Network",
