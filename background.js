@@ -228,14 +228,16 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     else if (args.length === 1) {
         const input = args[0];
 
-        // Define Regex for various address and transaction hash types
+        // Define Regex for various address, transaction hash, and name service types
+        const ensRegex = /\.eth$/; // Checks if the input ends with .eth
         const evmTxRegex = /^0x[a-fA-F0-9]{64}$/;
         const btcTxRegex = /^[a-fA-F0-9]{64}$/;
-
         const btcAddressRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
         const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
-        if (evmTxRegex.test(input)) {
+        if (ensRegex.test(input)) {
+            ticker = 'eth';   // ENS domain -> Etherscan
+        } else if (evmTxRegex.test(input)) {
             ticker = 'oklink'; // EVM Tx -> OKLink (Multi-chain)
         } else if (solanaTxRegex.test(input)) {
             ticker = 'sol'; // Solana Tx -> Solscan
