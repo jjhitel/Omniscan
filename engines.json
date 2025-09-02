@@ -129,11 +129,11 @@
     }, {
         "key": "apt",
         "name": "Aptos",
-        "url": "https://explorer.aptoslabs.com/search?query=%s"
+        "url": "https://explorer.aptoslabs.com/account/%s"
     }, {
         "key": "sui",
         "name": "Sui",
-        "url": "https://suiscan.xyz/search?query=%s"
+        "url": "https://suiscan.xyz/mainnet/account/%s"
     }, {
         "key": "tia",
         "name": "Celestia",
