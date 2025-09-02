@@ -1,4 +1,7 @@
 {
+    "appName": {
+        "message": "Omniscan"
+    },
     "appDesc": {
         "message": "주소창에서 키워드를 사용해 여러 블록체인 익스플로러를 검색합니다."
     },
