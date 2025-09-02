@@ -245,6 +245,9 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         const cardanoAddressRegex = /^addr1[a-z0-9]+$/;
         const stellarAddressRegex = /^G[A-Z0-9]{55}$/;
         const tezosAddressRegex = /^(tz1|tz2|tz3)[a-zA-Z0-9]{33}$/;
+        const dogeAddressRegex = /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/;
+        const ltcAddressRegex = /^(ltc1|[LM3])[a-km-zA-HJ-NP-Z1-9]{26,42}$/;
+        const bchAddressRegex = /^(bitcoincash:)?(q|p)[a-z0-9]{41}$/;
 
         // Detection order is important: more specific patterns must come before general ones.
         if (ensRegex.test(input)) {
@@ -263,6 +266,12 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
             ticker = 'xlm'; // Stellar Address -> Stellar Expert
         } else if (tezosAddressRegex.test(input)) {
             ticker = 'xtz'; // Tezos Address -> tzkt
+        } else if (dogeAddressRegex.test(input)) {
+            ticker = 'doge'; // Dogecoin Address -> Blockchair
+        } else if (ltcAddressRegex.test(input)) {
+            ticker = 'ltc'; // Litecoin Address -> Blockchair
+        } else if (bchAddressRegex.test(input)) {
+            ticker = 'bch'; // Bitcoin Cash Address -> Blockchair
         } else if (solanaTxRegex.test(input)) {
             ticker = 'sol'; // Solana Tx -> Solscan
         } else if (btcAddressRegex.test(input)) {
