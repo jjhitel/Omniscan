@@ -235,8 +235,12 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         const btcAddressRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
         const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
+        // Regex to identify Cosmos ecosystem addresses by their unique prefixes
+        const cosmosAddressRegex = /^(cosmos|osmo|tia|sei|inj|kava|akt|rune)1[a-z0-9]+$/;
+        const cosmosMatch = input.match(cosmosAddressRegex);
+
         if (ensRegex.test(input)) {
-            ticker = 'eth';   // ENS domain -> Etherscan
+            ticker = 'eth'; // ENS domain -> Etherscan
         } else if (evmTxRegex.test(input)) {
             ticker = 'oklink'; // EVM Tx -> OKLink (Multi-chain)
         } else if (solanaTxRegex.test(input)) {
@@ -245,6 +249,20 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
             ticker = 'btc'; // Bitcoin Address -> Bitcoin Explorer
         } else if (solAddressRegex.test(input)) {
             ticker = 'sol'; // Solana Address -> Solscan
+        } else if (cosmosMatch) {
+            // Map the matched address prefix to the correct engine ticker
+            const prefix = cosmosMatch[1];
+            const prefixTickerMap = {
+                'cosmos': 'atom',
+                'tia': 'tia',
+                'sei': 'sei',
+                'inj': 'inj',
+                'osmo': 'osmo',
+                'kava': 'kava',
+                'akt': 'akt',
+                'rune': 'rune'
+            };
+            ticker = prefixTickerMap[prefix];
         } else if (btcTxRegex.test(input)) {
             ticker = 'btc'; // Bitcoin Tx -> Bitcoin Explorer
         } else {
