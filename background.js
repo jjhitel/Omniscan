@@ -240,13 +240,10 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
         const cosmosAddressRegex = /^(cosmos|osmo|tia|sei|inj|kava|akt|rune)1[a-z0-9]+$/;
         const cosmosMatch = input.match(cosmosAddressRegex);
-        const tronAddressRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
         const xrpAddressRegex = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
         const cardanoAddressRegex = /^addr1[a-z0-9]+$/;
         const stellarAddressRegex = /^G[A-Z0-9]{55}$/;
         const tezosAddressRegex = /^(tz1|tz2|tz3)[a-zA-Z0-9]{33}$/;
-        const dogeAddressRegex = /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/;
-        const ltcAddressRegex = /^(ltc1|[LM3])[a-km-zA-HJ-NP-Z1-9]{26,42}$/;
         const bchAddressRegex = /^(bitcoincash:)?(q|p)[a-z0-9]{41}$/;
 
         // Detection order is important: more specific patterns must come before general ones.
@@ -256,8 +253,6 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
             ticker = 'near'; // NEAR Protocol -> NEAR Explorer
         } else if (longHexRegex.test(input)) {
             ticker = 'oklink'; // EVM Tx Hash or Move Address (Sui, Aptos) -> OKLink
-        } else if (tronAddressRegex.test(input)) {
-            ticker = 'trx'; // Tron Address -> Tronscan
         } else if (xrpAddressRegex.test(input)) {
             ticker = 'xrp'; // XRP Address -> XRP Scan
         } else if (cardanoAddressRegex.test(input)) {
@@ -266,10 +261,6 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
             ticker = 'xlm'; // Stellar Address -> Stellar Expert
         } else if (tezosAddressRegex.test(input)) {
             ticker = 'xtz'; // Tezos Address -> tzkt
-        } else if (dogeAddressRegex.test(input)) {
-            ticker = 'doge'; // Dogecoin Address -> Blockchair
-        } else if (ltcAddressRegex.test(input)) {
-            ticker = 'ltc'; // Litecoin Address -> Blockchair
         } else if (bchAddressRegex.test(input)) {
             ticker = 'bch'; // Bitcoin Cash Address -> Blockchair
         } else if (solanaTxRegex.test(input)) {
