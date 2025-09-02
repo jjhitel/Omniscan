@@ -229,20 +229,37 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         const input = args[0];
 
         // Define Regex for various address, transaction hash, and name service types
-        const ensRegex = /\.eth$/; // Checks if the input ends with .eth
+        const ensRegex = /\.eth$/;
+        const nearRegex = /\.near$/;
         const evmTxRegex = /^0x[a-fA-F0-9]{64}$/;
         const btcTxRegex = /^[a-fA-F0-9]{64}$/;
         const btcAddressRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
         const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-
-        // Regex to identify Cosmos ecosystem addresses by their unique prefixes
         const cosmosAddressRegex = /^(cosmos|osmo|tia|sei|inj|kava|akt|rune)1[a-z0-9]+$/;
         const cosmosMatch = input.match(cosmosAddressRegex);
+        const tronAddressRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+        const xrpAddressRegex = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+        const cardanoAddressRegex = /^addr1[a-z0-9]+$/;
+        const stellarAddressRegex = /^G[A-Z0-9]{55}$/;
+        const tezosAddressRegex = /^(tz1|tz2|tz3)[a-zA-Z0-9]{33}$/;
 
+        // --- Start of new/modified code (Order changed) ---
         if (ensRegex.test(input)) {
             ticker = 'eth'; // ENS domain -> Etherscan
+        } else if (nearRegex.test(input)) {
+            ticker = 'near'; // NEAR Protocol -> NEAR Explorer
         } else if (evmTxRegex.test(input)) {
             ticker = 'oklink'; // EVM Tx -> OKLink (Multi-chain)
+        } else if (tronAddressRegex.test(input)) {
+            ticker = 'trx'; // Tron Address -> Tronscan (MOVED UP)
+        } else if (xrpAddressRegex.test(input)) {
+            ticker = 'xrp'; // XRP Address -> XRP Scan (MOVED UP)
+        } else if (cardanoAddressRegex.test(input)) {
+            ticker = 'ada'; // Cardano Address -> CardanoScan (MOVED UP)
+        } else if (stellarAddressRegex.test(input)) {
+            ticker = 'xlm'; // Stellar Address -> Stellar Expert (MOVED UP)
+        } else if (tezosAddressRegex.test(input)) {
+            ticker = 'xtz'; // Tezos Address -> tzkt (MOVED UP)
         } else if (solanaTxRegex.test(input)) {
             ticker = 'sol'; // Solana Tx -> Solscan
         } else if (btcAddressRegex.test(input)) {
@@ -268,6 +285,7 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         } else {
             ticker = 'deb'; // Default to DeBank for everything else (like EVM addresses)
         }
+        // --- End of new/modified code ---
         query = input;
     }
 
