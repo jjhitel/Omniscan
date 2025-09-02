@@ -103,13 +103,15 @@ document.addEventListener('DOMContentLoaded', async() => {
         listElement.innerHTML = '';
         [...favorites, ...nonFavorites].forEach(engine => {
             const listItem = document.createElement('li');
+            const isModified = engine.isCustom || engine.isCustomized;
+
             listItem.innerHTML = `
                 <div class="engine-details" data-url="${engine.url}">
-                    <code>${engine.key}</code>
+                    <code class="${isModified ? 'modified-ticker' : ''}">${engine.key}</code>
                     <span class="engine-name">${engine.name}</span>
                 </div>
                 <div class="engine-actions">
-                    <span class="edit-btn ${engine.isCustomized ? 'modified' : ''}" title="${chrome.i18n.getMessage('editEngineTooltip')}">${engine.isCustom ? '&#128221;' : '&#9998;'}</span>
+                    <span class="edit-btn" title="${chrome.i18n.getMessage('editEngineTooltip')}">&#9998;</span>
                     <span class="favorite-star ${favoriteEngines.has(engine.key) ? 'favorited' : ''}" title="${chrome.i18n.getMessage('favoriteEngineTooltip')}">★</span>
                 </div>`;
 

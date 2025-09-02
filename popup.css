@@ -20,6 +20,7 @@
   --button-disabled-bg-color: #ccc;
   --reset-button-bg-color: #f44336;
   --reset-button-text-color: #fff;
+  --modified-ticker-color: #f44336; /* Red color for modified tickers */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,6 +45,7 @@
     --button-disabled-bg-color: #555;
     --reset-button-bg-color: #e57373;
     --reset-button-text-color: #2b2b2b;
+    --modified-ticker-color: #e57373; /* Lighter red for dark mode */
   }
 }
 
@@ -119,6 +121,7 @@ h3::before {
     position: absolute;
     right: 0; /* Align clear button to the far right */
 }
+
 
 p {
   margin: 0 0 15px 0;
@@ -240,8 +243,9 @@ li code {
   transition: color 0.2s;
 }
 
-.edit-btn.modified {
-  color: var(--reset-button-bg-color); /* Use the red color from reset button */
+.modified-ticker {
+    color: var(--modified-ticker-color);
+    border-color: var(--modified-ticker-color);
 }
 
 .edit-btn {
