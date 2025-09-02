@@ -5,7 +5,7 @@
     }, {
         "key": "btc",
         "name": "Bitcoin",
-        "url": "https://www.blockchain.com/explorer/search?searchTerm=%s"
+        "url": "https://www.blockchain.com/explorer/search?search=%s"
     }, {
         "key": "eth",
         "name": "Ethereum",
