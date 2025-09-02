@@ -1,6 +1,6 @@
 {
     "name": "omniscan",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Search various blockchain explorers from the address bar.",
     "type": "module",
     "scripts": {
