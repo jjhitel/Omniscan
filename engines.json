@@ -37,7 +37,7 @@
     }, {
         "key": "doge",
         "name": "Dogecoin",
-        "url": "https://blockchair.com/dogecoin/search?q=%s"
+        "url": "https://blockchair.com/search?q=%s"
     }, {
         "key": "ton",
         "name": "The Open Network",
@@ -53,11 +53,11 @@
     }, {
         "key": "ltc",
         "name": "Litecoin",
-        "url": "https://blockchair.com/litecoin/search?q=%s"
+        "url": "https://blockchair.com/search?q=%s"
     }, {
         "key": "bch",
         "name": "Bitcoin Cash",
-        "url": "https://blockchair.com/bitcoin-cash/search?q=%s"
+        "url": "https://blockchair.com/search?q=%s"
     }, {
         "key": "avax",
         "name": "Avalanche C-Chain",
@@ -221,11 +221,11 @@
     }, {
         "key": "dash",
         "name": "Dash",
-        "url": "https://blockchair.com/dash/search?q=%s"
+        "url": "https://blockchair.com/search?q=%s"
     }, {
         "key": "zec",
         "name": "Zcash",
-        "url": "https://blockchair.com/zcash/search?q=%s"
+        "url": "https://blockchair.com/search?q=%s"
     }, {
         "key": "dcr",
         "name": "Decred",
