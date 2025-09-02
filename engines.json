@@ -21,7 +21,7 @@
     }, {
         "key": "xrp",
         "name": "XRP Ledger",
-        "url": "https://xrpscan.com/search?q=%s"
+        "url": "https://xrpscan.com/account/%s"
     }, {
         "key": "sol",
         "name": "Solana",
