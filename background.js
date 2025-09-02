@@ -231,7 +231,10 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         // Define Regex for various address, transaction hash, and name service types
         const ensRegex = /\.eth$/;
         const nearRegex = /\.near$/;
-        const evmTxRegex = /^0x[a-fA-F0-9]{64}$/;
+        // This general-purpose regex matches 66-character hex strings (0x + 64 chars).
+        // It covers EVM transaction hashes as well as Move-based addresses (Sui, Aptos).
+        // OKLink is a multi-chain explorer that can handle all of these formats.
+        const longHexRegex = /^0x[a-fA-F0-9]{64}$/;
         const btcTxRegex = /^[a-fA-F0-9]{64}$/;
         const btcAddressRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
         const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -243,23 +246,23 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         const stellarAddressRegex = /^G[A-Z0-9]{55}$/;
         const tezosAddressRegex = /^(tz1|tz2|tz3)[a-zA-Z0-9]{33}$/;
 
-        // --- Start of new/modified code (Order changed) ---
+        // Detection order is important: more specific patterns must come before general ones.
         if (ensRegex.test(input)) {
             ticker = 'eth'; // ENS domain -> Etherscan
         } else if (nearRegex.test(input)) {
             ticker = 'near'; // NEAR Protocol -> NEAR Explorer
-        } else if (evmTxRegex.test(input)) {
-            ticker = 'oklink'; // EVM Tx -> OKLink (Multi-chain)
+        } else if (longHexRegex.test(input)) {
+            ticker = 'oklink'; // EVM Tx Hash or Move Address (Sui, Aptos) -> OKLink
         } else if (tronAddressRegex.test(input)) {
-            ticker = 'trx'; // Tron Address -> Tronscan (MOVED UP)
+            ticker = 'trx'; // Tron Address -> Tronscan
         } else if (xrpAddressRegex.test(input)) {
-            ticker = 'xrp'; // XRP Address -> XRP Scan (MOVED UP)
+            ticker = 'xrp'; // XRP Address -> XRP Scan
         } else if (cardanoAddressRegex.test(input)) {
-            ticker = 'ada'; // Cardano Address -> CardanoScan (MOVED UP)
+            ticker = 'ada'; // Cardano Address -> CardanoScan
         } else if (stellarAddressRegex.test(input)) {
-            ticker = 'xlm'; // Stellar Address -> Stellar Expert (MOVED UP)
+            ticker = 'xlm'; // Stellar Address -> Stellar Expert
         } else if (tezosAddressRegex.test(input)) {
-            ticker = 'xtz'; // Tezos Address -> tzkt (MOVED UP)
+            ticker = 'xtz'; // Tezos Address -> tzkt
         } else if (solanaTxRegex.test(input)) {
             ticker = 'sol'; // Solana Tx -> Solscan
         } else if (btcAddressRegex.test(input)) {
