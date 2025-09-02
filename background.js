@@ -227,13 +227,16 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
         query = potentialQuery;
     }
     // Case 2: "scan <address>"
-     else if (args.length === 1) {
+    else if (args.length === 1) {
         const address = args[0];
-        // Regex for all major Bitcoin address types
+        // Regex for different address types
         const btcRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
+        const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
         if (btcRegex.test(address)) {
-            ticker = 'btc'; // It's a Bitcoin address, so set ticker to btc
+            ticker = 'btc'; // It's a Bitcoin address
+        } else if (solRegex.test(address)) {
+            ticker = 'sol'; // It's a Solana address
         } else {
             ticker = 'deb'; // Otherwise, default to debank
         }
