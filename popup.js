@@ -175,14 +175,14 @@ document.addEventListener('DOMContentLoaded', async() => {
     // --- View Switching ---
     const showMainView = () => {
         historyView.style.display = 'none';
-        mainView.style.display = 'block';
+        mainView.style.display = 'flex'; // Use 'flex' to match CSS and maintain layout
     };
 
     const showHistoryView = async() => {
         await loadData(); // Always get the latest history
         renderHistoryList();
         mainView.style.display = 'none';
-        historyView.style.display = 'block';
+        historyView.style.display = 'flex'; // Use 'flex' to match CSS and maintain layout
     };
 
     // --- Modal Logic ---
