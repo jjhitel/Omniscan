@@ -162,7 +162,22 @@ document.addEventListener('DOMContentLoaded', async() => {
     // --- Modal Logic ---
 
     const validateUrl = () => {
-        const isValid = urlInput.value.includes('%s');
+        const urlValue = urlInput.value;
+        let isValid = false;
+
+        if (urlValue.includes('%s')) {
+            try {
+                // Use the URL constructor to validate the overall structure
+                const url = new URL(urlValue.replace('%s', 'test'));
+                // Check if the protocol is http or https
+                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                    isValid = true;
+                }
+            } catch (e) {
+                // If the URL constructor throws an error, it's not a valid URL
+                isValid = false;
+            }
+        }
         saveBtn.disabled = !isValid;
     };
 
