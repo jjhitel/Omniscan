@@ -100,32 +100,61 @@ document.addEventListener('DOMContentLoaded', async() => {
         listElement.innerHTML = '';
 
         for (const engine of sortedEngines) {
+            // 1. Create elements manually instead of using innerHTML
             const listItem = document.createElement('li');
-            const editIcon = engine.isCustom ? '&#128221;' : '&#9998;';
-            const editButtonClass = engine.isCustomized ? 'edit-btn modified' : 'edit-btn';
 
-            listItem.innerHTML = `
-                <div class="engine-details" data-url="${engine.url}">
-                    <code>${engine.key}</code>
-                    <span class="engine-name">${engine.name}</span>
-                </div>
-                <div class="engine-actions">
-                    <span class="${editButtonClass}" title="${chrome.i18n.getMessage('editEngineTooltip')}">${editIcon}</span>
-                    <span class="favorite-star ${favoriteEngines.has(engine.key) ? 'favorited' : ''}" title="${chrome.i18n.getMessage('favoriteEngineTooltip')}">★</span>
-                </div>
-            `;
-            listItem.querySelector('.engine-details').addEventListener('click', () => {
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'engine-details';
+            detailsDiv.dataset.url = engine.url; // Safely set data attribute
+
+            const codeElement = document.createElement('code');
+            codeElement.textContent = engine.key; // Use textContent
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'engine-name';
+            nameSpan.textContent = engine.name; // Use textContent
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'engine-actions';
+
+            const editSpan = document.createElement('span');
+            editSpan.className = engine.isCustomized ? 'edit-btn modified' : 'edit-btn';
+            editSpan.title = chrome.i18n.getMessage('editEngineTooltip');
+            editSpan.innerHTML = engine.isCustom ? '&#128221;' : '&#9998;'; // Icons are safe for innerHTML
+
+            const starSpan = document.createElement('span');
+            starSpan.className = 'favorite-star';
+            if (favoriteEngines.has(engine.key)) {
+                starSpan.classList.add('favorited');
+            }
+            starSpan.title = chrome.i18n.getMessage('favoriteEngineTooltip');
+            starSpan.textContent = '★';
+
+            // 2. Add event listeners
+            detailsDiv.addEventListener('click', () => {
                 const searchUrl = engine.url;
                 if (searchUrl) {
-                    const homepage = new URL(searchUrl).origin;
-                    chrome.tabs.create({
-                        url: homepage,
-                        active: true
-                    });
+                    try {
+                        const homepage = new URL(searchUrl).origin;
+                        chrome.tabs.create({
+                            url: homepage,
+                            active: true
+                        });
+                    } catch (e) {
+                        console.error("Invalid URL for engine:", engine.key, e);
+                    }
                 }
             });
-            listItem.querySelector('.edit-btn').addEventListener('click', () => openModal(true, engine));
-            listItem.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(engine.key));
+            editSpan.addEventListener('click', () => openModal(true, engine));
+            starSpan.addEventListener('click', () => toggleFavorite(engine.key));
+
+            // 3. Append elements to build the structure
+            detailsDiv.appendChild(codeElement);
+            detailsDiv.appendChild(nameSpan);
+            actionsDiv.appendChild(editSpan);
+            actionsDiv.appendChild(starSpan);
+            listItem.appendChild(detailsDiv);
+            listItem.appendChild(actionsDiv);
             listElement.appendChild(listItem);
         }
     };
