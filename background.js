@@ -186,6 +186,7 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     }
 
     const args = text.trim().split(/\s+/).filter(p => p.length > 0);
+    const solanaTxRegex = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/; // Solana hashes are typically longer
 
     if (args.length === 0)
         return;
@@ -228,19 +229,29 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     }
     // Case 2: "scan <address>"
     else if (args.length === 1) {
-        const address = args[0];
-        // Regex for different address types
-        const btcRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
-        const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+        const input = args[0];
 
-        if (btcRegex.test(address)) {
-            ticker = 'btc'; // It's a Bitcoin address
-        } else if (solRegex.test(address)) {
-            ticker = 'sol'; // It's a Solana address
+        // Define Regex for various address and transaction hash types
+        const evmTxRegex = /^0x[a-fA-F0-9]{64}$/;
+        const btcTxRegex = /^[a-fA-F0-9]{64}$/;
+
+        const btcAddressRegex = /^(bc1p|bc1q|[13])[a-km-zA-HJ-NP-Z1-9]{25,90}$/;
+        const solAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+        if (evmTxRegex.test(input)) {
+            ticker = 'oklink'; // EVM Tx -> OKLink (Multi-chain)
+        } else if (solanaTxRegex.test(input)) {
+            ticker = 'sol'; // Solana Tx -> Solscan
+        } else if (btcAddressRegex.test(input)) {
+            ticker = 'btc'; // Bitcoin Address -> Bitcoin Explorer
+        } else if (solAddressRegex.test(input)) {
+            ticker = 'sol'; // Solana Address -> Solscan
+        } else if (btcTxRegex.test(input)) {
+            ticker = 'btc'; // Bitcoin Tx -> Bitcoin Explorer
         } else {
-            ticker = 'deb'; // Otherwise, default to debank
+            ticker = 'deb'; // Default to DeBank for everything else (like EVM addresses)
         }
-        query = address;
+        query = input;
     }
 
     // If no matching engine is found, do nothing.
@@ -251,7 +262,21 @@ chrome.omnibox.onInputEntered.addListener(async(text, disposition) => {
     const engine = SEARCH_ENGINES[ticker];
 
     if (engine && query) {
-        let searchUrl = engine.url.replace('%s', encodeURIComponent(query));
+        let searchUrl;
+
+        // Special handling for Solana to route addresses and txs correctly
+        if (ticker === 'sol') {
+            if (solanaTxRegex.test(query)) {
+                // It's a transaction, use the /tx/ path
+                searchUrl = `https://solscan.io/tx/${encodeURIComponent(query)}`;
+            } else {
+                // It's an address, use the default URL from engines.json
+                searchUrl = engine.url.replace('%s', encodeURIComponent(query));
+            }
+        } else {
+            // For all other engines, use the default behavior
+            searchUrl = engine.url.replace('%s', encodeURIComponent(query));
+        }
 
         // Add URL protocol validation as a defense-in-depth measure
         if (!searchUrl.startsWith('https:') && !searchUrl.startsWith('http:')) {

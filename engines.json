@@ -3,6 +3,10 @@
         "name": "DeBank",
         "url": "https://debank.com/profile/%s"
     }, {
+        "key": "oklink",
+        "name": "OKLink",
+        "url": "https://www.oklink.com/ko/multi-search#key=%s"
+    }, {
         "key": "btc",
         "name": "Bitcoin",
         "url": "https://www.blockchain.com/explorer/search?search=%s"
