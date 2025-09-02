@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async() => {
         localizePage();
         await loadData();
         try {
-            const url = chrome.runtime.getURL('engines.json');
+            const url = chrome.runtime.getURL('assets/engines.json');
             const response = await fetch(url);
             allEngines = await response.json();
         } catch (error) {

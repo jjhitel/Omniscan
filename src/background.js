@@ -7,7 +7,7 @@ let searchHistory = []; // To keep an in-memory copy
 async function loadEngines() {
     // Fetches and loads all search engines (default + custom) into SEARCH_ENGINES.
     try {
-        const url = chrome.runtime.getURL('engines.json');
+        const url = chrome.runtime.getURL('assets/engines.json');
         const response = await fetch(url);
         const defaultEngines = await response.json();
         const engineMap = new Map();

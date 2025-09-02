@@ -2,13 +2,18 @@
     "name": "omniscan",
     "version": "1.0.1",
     "description": "Search various blockchain explorers from the address bar.",
+    "type": "module",
     "scripts": {
         "test": "node scripts/validate-engines.js",
-        "build": "node scripts/build.js"
+        "dev": "vite",
+        "build": "vite build",
+        "build:chrome": "node scripts/prebuild.js && vite build && node scripts/zip.js"
     },
     "author": "",
     "license": "GPL-3.0-or-later",
     "devDependencies": {
-        "archiver": "^7.0.1"
+        "archiver": "^7.0.1",
+        "vite": "^7.1.4",
+        "vite-plugin-web-extension": "^4.4.5"
     }
 }

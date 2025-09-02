@@ -1,10 +1,12 @@
 // scripts/validate-engines.js
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Calculate the absolute path to the engines.json file.
-const enginesFilePath = path.join(__dirname, '..', 'engines.json');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Calculate the absolute path to the engines.json file in its new location.
+const enginesFilePath = path.join(__dirname, '..', 'public', 'assets', 'engines.json');
 
 console.log(`Validating engines file: ${enginesFilePath}`);
 
