@@ -51,6 +51,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   width: 320px;
+  min-height: 300px; /* Ensure a minimum height */
   padding: 15px;
   font-size: 14px;
   background-color: var(--bg-color);
@@ -79,6 +80,9 @@ h3::before {
 }
 
 #add-engine-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
   font-size: 24px;
   font-weight: bold;
   background: none;
@@ -87,6 +91,33 @@ h3::before {
   cursor: pointer;
   padding: 0 5px;
   line-height: 1;
+}
+
+#history-btn, #back-btn, #clear-history-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--icon-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Specific alignment for history page header */
+#history-view .header-container {
+    position: relative;
+    justify-content: center; /* Center the title */
+}
+
+#history-view .header-container #back-btn {
+    position: absolute;
+    left: 0; /* Align back button to the far left */
+}
+
+#history-view .header-container #clear-history-btn {
+    position: absolute;
+    right: 0; /* Align clear button to the far right */
 }
 
 p {
@@ -105,9 +136,10 @@ code {
   border: 1px solid var(--code-border-color);
 }
 
-/* --- New Search Container --- */
+/* --- Search Container --- */
 .search-container {
   margin-top: 20px;
+  position: relative;
   border: 1px solid var(--dropdown-border-color);
   border-radius: 6px;
   background-color: var(--dropdown-bg-color);
@@ -116,7 +148,7 @@ code {
 /* --- Search Input Styles --- */
 #searchInput {
   width: 100%;
-  padding: 10px 15px;
+  padding: 10px 40px 10px 15px;
   font-size: 14px;
   font-family: inherit;
   border-radius: 6px 6px 0 0;
@@ -132,14 +164,22 @@ code {
   box-shadow: 0 0 0 2px rgba(85, 119, 255, 0.2);
 }
 
-/* --- List of Search Engines --- */
+/* --- List of Search Engines & History --- */
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  height: 200px;
+  max-height: 200px;
   overflow-y: auto;
 }
+
+#history-list {
+    border: 1px solid var(--dropdown-border-color);
+    border-radius: 6px;
+    background-color: var(--dropdown-bg-color);
+    max-height: calc(100vh - 100px); /* Adjust height for history page */
+}
+
 
 ul::-webkit-scrollbar {
   width: 6px;
@@ -212,6 +252,21 @@ li code {
     color: var(--favorited-star-color);
 }
 
+/* --- History List Specific Styles --- */
+#history-list li {
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.history-item-text {
+  font-family: 'Courier New', Courier, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 /* --- Modal Styles --- */
 .modal-overlay {
   position: fixed;
@@ -283,4 +338,9 @@ li code {
 #save-btn:disabled {
   background-color: var(--button-disabled-bg-color);
   cursor: not-allowed;
+}
+
+/* Removes the magnifying glass icon from the history page title */
+#history-view h3::before {
+    content: none;
 }

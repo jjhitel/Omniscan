@@ -79,5 +79,17 @@
     },
     "favoriteEngineTooltip": {
         "message": "즐겨찾기 전환"
+    },
+    "historyTooltip": {
+        "message": "검색 기록 보기"
+    },
+    "clearHistoryTooltip": {
+        "message": "기록 전체 삭제"
+    },
+    "searchHistoryTitle": {
+        "message": "최근 검색"
+    },
+    "noHistory": {
+        "message": "아직 검색 기록이 없습니다."
     }
 }

@@ -79,5 +79,17 @@
     },
     "favoriteEngineTooltip": {
         "message": "Toggle Favorite"
+    },
+    "historyTooltip": {
+        "message": "View Search History"
+    },
+    "clearHistoryTooltip": {
+        "message": "Clear all history"
+    },
+    "searchHistoryTitle": {
+        "message": "Recent Searches"
+    },
+    "noHistory": {
+        "message": "No search history yet."
     }
 }

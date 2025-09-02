@@ -2,6 +2,8 @@
 
 document.addEventListener('DOMContentLoaded', async() => {
     // --- DOM Elements ---
+    const mainView = document.getElementById('main-view');
+    const historyView = document.getElementById('history-view');
     const searchInputElement = document.getElementById('searchInput');
     const listElement = document.getElementById('engine-list');
     const modalElement = document.getElementById('engine-modal');
@@ -15,35 +17,44 @@ document.addEventListener('DOMContentLoaded', async() => {
     const addEngineBtn = document.getElementById('add-engine-btn');
     const resetBtn = document.getElementById('reset-btn');
     const deleteBtn = document.getElementById('delete-btn');
+    const historyBtn = document.getElementById('history-btn');
+    const backBtn = document.getElementById('back-btn');
+    const historyListElement = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
 
     let allEngines = [];
     let customEngines = {};
     let favoriteEngines = new Set();
+    let searchHistory = [];
     let isEditing = false;
     let originalKey = '';
 
     // --- Data Management ---
 
     const loadData = async() => {
+        // Loads favorites, custom engines, and search history from chrome.storage.
         if (!chrome.storage || !chrome.storage.local) {
             console.error("Omniscan: Storage API is not available.");
             return;
         }
-        const result = await chrome.storage.local.get(['favorites', 'customEngines']);
+        const result = await chrome.storage.local.get(['favorites', 'customEngines', 'searchHistory']);
         favoriteEngines = new Set(result.favorites || []);
         customEngines = result.customEngines || {};
+        searchHistory = result.searchHistory || [];
     };
 
     const saveData = async() => {
+        // Saves favorites and custom engines to chrome.storage.
         if (!chrome.storage || !chrome.storage.local)
             return;
         await chrome.storage.local.set({
             favorites: Array.from(favoriteEngines),
-            customEngines: customEngines
+            customEngines: customEngines,
         });
     };
 
     const toggleFavorite = async(engineKey) => {
+        // Toggles an engine's favorite status and saves it.
         if (favoriteEngines.has(engineKey)) {
             favoriteEngines.delete(engineKey);
         } else {
@@ -58,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     // --- UI Rendering ---
 
     const getCombinedEngines = () => {
+        // Merges default and custom engines for rendering.
         const mergedEngines = allEngines.map(engine => {
             if (customEngines[engine.key]) {
                 return {
@@ -79,109 +91,118 @@ document.addEventListener('DOMContentLoaded', async() => {
     };
 
     const renderEngineList = (enginesToRender) => {
-        const fullList = enginesToRender;
-
+        // Renders the list of search engines based on the current filter and favorites.
         const searchTerm = searchInputElement.value.toLowerCase().trim();
         const filteredList = searchTerm ?
-            fullList.filter(engine => engine.key.toLowerCase().includes(searchTerm) || engine.name.toLowerCase().includes(searchTerm)) :
-            fullList;
+            enginesToRender.filter(e => e.key.toLowerCase().includes(searchTerm) || e.name.toLowerCase().includes(searchTerm)) :
+            enginesToRender;
 
-        const favorites = [];
-        const nonFavorites = [];
-        for (const engine of filteredList) {
-            if (favoriteEngines.has(engine.key)) {
-                favorites.push(engine);
-            } else {
-                nonFavorites.push(engine);
-            }
-        }
+        const favorites = filteredList.filter(e => favoriteEngines.has(e.key));
+        const nonFavorites = filteredList.filter(e => !favoriteEngines.has(e.key));
 
-        const sortedEngines = [...favorites, ...nonFavorites];
         listElement.innerHTML = '';
-
-        for (const engine of sortedEngines) {
-            // 1. Create elements manually instead of using innerHTML
+        [...favorites, ...nonFavorites].forEach(engine => {
             const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <div class="engine-details" data-url="${engine.url}">
+                    <code>${engine.key}</code>
+                    <span class="engine-name">${engine.name}</span>
+                </div>
+                <div class="engine-actions">
+                    <span class="edit-btn ${engine.isCustomized ? 'modified' : ''}" title="${chrome.i18n.getMessage('editEngineTooltip')}">${engine.isCustom ? '&#128221;' : '&#9998;'}</span>
+                    <span class="favorite-star ${favoriteEngines.has(engine.key) ? 'favorited' : ''}" title="${chrome.i18n.getMessage('favoriteEngineTooltip')}">★</span>
+                </div>`;
 
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'engine-details';
-            detailsDiv.dataset.url = engine.url; // Safely set data attribute
-
-            const codeElement = document.createElement('code');
-            codeElement.textContent = engine.key; // Use textContent
-
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'engine-name';
-            nameSpan.textContent = engine.name; // Use textContent
-
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'engine-actions';
-
-            const editSpan = document.createElement('span');
-            editSpan.className = engine.isCustomized ? 'edit-btn modified' : 'edit-btn';
-            editSpan.title = chrome.i18n.getMessage('editEngineTooltip');
-            editSpan.innerHTML = engine.isCustom ? '&#128221;' : '&#9998;'; // Icons are safe for innerHTML
-
-            const starSpan = document.createElement('span');
-            starSpan.className = 'favorite-star';
-            if (favoriteEngines.has(engine.key)) {
-                starSpan.classList.add('favorited');
-            }
-            starSpan.title = chrome.i18n.getMessage('favoriteEngineTooltip');
-            starSpan.textContent = '★';
-
-            // 2. Add event listeners
-            detailsDiv.addEventListener('click', () => {
-                const searchUrl = engine.url;
-                if (searchUrl) {
-                    try {
-                        const homepage = new URL(searchUrl).origin;
-                        chrome.tabs.create({
-                            url: homepage,
-                            active: true
-                        });
-                    } catch (e) {
-                        console.error("Invalid URL for engine:", engine.key, e);
-                    }
+            listItem.querySelector('.engine-details').addEventListener('click', () => {
+                try {
+                    const homepage = new URL(engine.url).origin;
+                    chrome.tabs.create({
+                        url: homepage,
+                        active: true
+                    });
+                } catch (e) {
+                    console.error("Invalid URL:", e);
                 }
             });
-            editSpan.addEventListener('click', () => openModal(true, engine));
-            starSpan.addEventListener('click', () => toggleFavorite(engine.key));
-
-            // 3. Append elements to build the structure
-            detailsDiv.appendChild(codeElement);
-            detailsDiv.appendChild(nameSpan);
-            actionsDiv.appendChild(editSpan);
-            actionsDiv.appendChild(starSpan);
-            listItem.appendChild(detailsDiv);
-            listItem.appendChild(actionsDiv);
+            listItem.querySelector('.edit-btn').addEventListener('click', () => openModal(true, engine));
+            listItem.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(engine.key));
             listElement.appendChild(listItem);
+        });
+    };
+
+    const formatHistoryItem = (text) => {
+        // Formats the search text for display (e.g., 'arb 0x123...abc').
+        const parts = text.trim().split(/\s+/);
+        if (parts.length > 1) {
+            const lastPart = parts[parts.length - 1];
+            if (lastPart.length > 12) {
+                const shortened = `${lastPart.slice(0, 6)}..${lastPart.slice(-6)}`;
+                return `${parts.slice(0, -1).join(' ')} ${shortened}`;
+            }
+        } else if (parts.length === 1 && parts[0].length > 12) {
+            const item = parts[0];
+            return `${item.slice(0, 6)}..${item.slice(-6)}`;
         }
+        return text;
+    };
+
+    const renderHistoryList = () => {
+        // Renders the search history list.
+        historyListElement.innerHTML = '';
+        if (searchHistory.length === 0) {
+            historyListElement.innerHTML = `<li style="justify-content: center;">${chrome.i18n.getMessage('noHistory')}</li>`;
+            return;
+        }
+
+        searchHistory.forEach(item => {
+            const li = document.createElement('li');
+            li.dataset.fullText = item; // Store the original text
+            li.innerHTML = `<span class="history-item-text">${formatHistoryItem(item)}</span>`;
+            li.addEventListener('click', () => {
+                // Send a message to the background script to execute the search
+                chrome.runtime.sendMessage({
+                    action: "executeSearch",
+                    searchText: item
+                });
+                window.close(); // Close the popup
+            });
+            historyListElement.appendChild(li);
+        });
+    };
+
+    // --- View Switching ---
+    const showMainView = () => {
+        historyView.style.display = 'none';
+        mainView.style.display = 'block';
+    };
+
+    const showHistoryView = async() => {
+        await loadData(); // Always get the latest history
+        renderHistoryList();
+        mainView.style.display = 'none';
+        historyView.style.display = 'block';
     };
 
     // --- Modal Logic ---
 
     const validateUrl = () => {
+        // Validates the URL input in the modal.
         const urlValue = urlInput.value;
         let isValid = false;
-
         if (urlValue.includes('%s')) {
             try {
-                // Use the URL constructor to validate the overall structure
                 const url = new URL(urlValue.replace('%s', 'test'));
-                // Check if the protocol is http or https
-                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                if (['http:', 'https:'].includes(url.protocol)) {
                     isValid = true;
                 }
-            } catch (e) {
-                // If the URL constructor throws an error, it's not a valid URL
-                isValid = false;
+            } catch (e) { /* Invalid URL */
             }
         }
         saveBtn.disabled = !isValid;
     };
 
     const openModal = (editing = false, engine = {}) => {
+        // Opens the add/edit engine modal.
         isEditing = editing;
         originalKey = engine.key || '';
         modalTitleElement.textContent = chrome.i18n.getMessage(isEditing ? 'modalTitleEdit' : 'modalTitleAdd');
@@ -199,32 +220,32 @@ document.addEventListener('DOMContentLoaded', async() => {
     };
 
     const closeModal = () => {
+        // Closes the modal.
         engineForm.reset();
         modalElement.style.display = 'none';
     };
 
     const handleFormSubmit = async(event) => {
+        // Handles saving a new or edited engine.
         event.preventDefault();
         const newKey = keyInput.value.toLowerCase().trim();
         if (!newKey)
             return;
-
         if (!isEditing && getCombinedEngines().some(e => e.key === newKey)) {
             alert(chrome.i18n.getMessage('alertTickerExists', newKey));
             return;
         }
-
         customEngines[newKey] = {
             name: nameInput.value.trim(),
             url: urlInput.value.trim()
         };
-
         await saveData();
         renderEngineList(getCombinedEngines());
         closeModal();
     };
 
     const handleReset = async() => {
+        // Resets a modified default engine.
         if (customEngines[originalKey]) {
             delete customEngines[originalKey];
             await saveData();
@@ -234,65 +255,69 @@ document.addEventListener('DOMContentLoaded', async() => {
     };
 
     const handleDelete = async() => {
-        const confirmMessage = chrome.i18n.getMessage('confirmDeleteMessage', originalKey);
-        if (confirm(confirmMessage)) {
-            if (customEngines[originalKey]) {
+        // Deletes a custom engine.
+        if (confirm(chrome.i18n.getMessage('confirmDeleteMessage', originalKey))) {
+            if (customEngines[originalKey])
                 delete customEngines[originalKey];
-            }
-            if (favoriteEngines.has(originalKey)) {
+            if (favoriteEngines.has(originalKey))
                 favoriteEngines.delete(originalKey);
-            }
             await saveData();
             renderEngineList(getCombinedEngines());
             closeModal();
         }
     };
 
+    const handleClearHistory = async() => {
+        // Clears the entire search history.
+        searchHistory = [];
+        await chrome.storage.local.set({
+            searchHistory: []
+        });
+        renderHistoryList();
+    };
+
     // --- Main Initialization & Localization ---
 
     const localizePage = () => {
-        document.querySelectorAll('[data-i18n]').forEach(elem => {
-            const messageKey = elem.getAttribute('data-i18n');
-            elem.textContent = chrome.i18n.getMessage(messageKey);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
-            const messageKey = elem.getAttribute('data-i18n-placeholder');
-            elem.placeholder = chrome.i18n.getMessage(messageKey);
-        });
-        document.querySelectorAll('[data-i18n-title]').forEach(elem => {
-            const messageKey = elem.getAttribute('data-i18n-title');
-            elem.title = chrome.i18n.getMessage(messageKey);
-        });
-
-        const descriptionElement = document.getElementById('popupDescription');
-        descriptionElement.innerHTML = chrome.i18n.getMessage("popupDescription");
+        // Applies localized strings to the UI.
+        document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = chrome.i18n.getMessage(el.dataset.i18n));
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = chrome.i18n.getMessage(el.dataset.i18nPlaceholder));
+        document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = chrome.i18n.getMessage(el.dataset.i18nTitle));
+        document.getElementById('popupDescription').innerHTML = chrome.i18n.getMessage("popupDescription");
     };
 
-    localizePage();
+    const init = async() => {
+        // Main function to initialize the popup.
+        localizePage();
+        await loadData();
+        try {
+            const url = chrome.runtime.getURL('engines.json');
+            const response = await fetch(url);
+            allEngines = await response.json();
+        } catch (error) {
+            console.error("Omniscan: Failed to load engines.json", error);
+            listElement.innerHTML = `<li>Error loading search engines.</li>`;
+            return;
+        }
+        renderEngineList(getCombinedEngines());
 
-    await loadData();
+        // --- Event Listeners ---
+        searchInputElement.addEventListener('input', () => renderEngineList(getCombinedEngines()));
+        addEngineBtn.addEventListener('click', () => openModal(false));
+        cancelBtn.addEventListener('click', closeModal);
+        resetBtn.addEventListener('click', handleReset);
+        deleteBtn.addEventListener('click', handleDelete);
+        engineForm.addEventListener('submit', handleFormSubmit);
+        urlInput.addEventListener('input', validateUrl);
+        modalElement.addEventListener('click', (e) => {
+            if (e.target === modalElement)
+                closeModal();
+        });
 
-    try {
-        const url = chrome.runtime.getURL('engines.json');
-        const response = await fetch(url);
-        allEngines = await response.json();
-    } catch (error) {
-        console.error("Omniscan: Failed to load engines.json", error);
-        listElement.innerHTML = `<li>Error loading search engines.</li>`;
-        return;
-    }
+        historyBtn.addEventListener('click', showHistoryView);
+        backBtn.addEventListener('click', showMainView);
+        clearHistoryBtn.addEventListener('click', handleClearHistory);
+    };
 
-    renderEngineList(getCombinedEngines());
-
-    searchInputElement.addEventListener('input', () => renderEngineList(getCombinedEngines()));
-    addEngineBtn.addEventListener('click', () => openModal(false));
-    cancelBtn.addEventListener('click', closeModal);
-    resetBtn.addEventListener('click', handleReset);
-    deleteBtn.addEventListener('click', handleDelete);
-    engineForm.addEventListener('submit', handleFormSubmit);
-    urlInput.addEventListener('input', validateUrl);
-    modalElement.addEventListener('click', (e) => {
-        if (e.target === modalElement)
-            closeModal();
-    });
+    init();
 });
