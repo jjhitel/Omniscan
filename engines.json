@@ -45,7 +45,7 @@
     }, {
         "key": "trx",
         "name": "TRON",
-        "url": "https://tronscan.org/#/search?keyword=%s"
+        "url": "https://tronscan.org/#/address/%s"
     }, {
         "key": "dot",
         "name": "Polkadot",
