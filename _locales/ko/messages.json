@@ -55,8 +55,19 @@
     "modalButtonReset": {
         "message": "초기화"
     },
+    "modalButtonDelete": {
+        "message": "삭제"
+    },
     "alertTickerExists": {
         "message": "티커 '$ticker$'가 이미 존재합니다.",
+        "placeholders": {
+            "ticker": {
+                "content": "$1"
+            }
+        }
+    },
+    "confirmDeleteMessage": {
+        "message": "'$ticker$' 엔진을 정말 삭제하시겠습니까?",
         "placeholders": {
             "ticker": {
                 "content": "$1"

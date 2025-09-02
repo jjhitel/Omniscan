@@ -269,7 +269,7 @@ li code {
   color: var(--text-color);
 }
 
-#reset-btn {
+#reset-btn, #delete-btn {
   background-color: var(--reset-button-bg-color);
   color: var(--reset-button-text-color);
   margin-right: auto; /* Pushes this button to the left */

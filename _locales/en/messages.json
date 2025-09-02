@@ -55,8 +55,19 @@
     "modalButtonReset": {
         "message": "Reset"
     },
+    "modalButtonDelete": {
+        "message": "Delete"
+    },
     "alertTickerExists": {
         "message": "Ticker '$ticker$' already exists.",
+        "placeholders": {
+            "ticker": {
+                "content": "$1"
+            }
+        }
+    },
+    "confirmDeleteMessage": {
+        "message": "Are you sure you want to delete the '$ticker$' engine?",
         "placeholders": {
             "ticker": {
                 "content": "$1"

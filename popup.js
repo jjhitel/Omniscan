@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     const cancelBtn = document.getElementById('cancel-btn');
     const addEngineBtn = document.getElementById('add-engine-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const deleteBtn = document.getElementById('delete-btn');
 
     let allEngines = [];
     let customEngines = {};
@@ -147,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async() => {
 
         const isDefaultEngine = allEngines.some(e => e.key === originalKey);
         resetBtn.style.display = (isEditing && isDefaultEngine && customEngines[originalKey]) ? 'block' : 'none';
+        deleteBtn.style.display = (isEditing && !isDefaultEngine) ? 'block' : 'none';
 
         modalElement.style.display = 'flex';
         validateUrl();
@@ -181,6 +183,21 @@ document.addEventListener('DOMContentLoaded', async() => {
     const handleReset = async() => {
         if (customEngines[originalKey]) {
             delete customEngines[originalKey];
+            await saveData();
+            renderEngineList(getCombinedEngines());
+            closeModal();
+        }
+    };
+
+    const handleDelete = async() => {
+        const confirmMessage = chrome.i18n.getMessage('confirmDeleteMessage', originalKey);
+        if (confirm(confirmMessage)) {
+            if (customEngines[originalKey]) {
+                delete customEngines[originalKey];
+            }
+            if (favoriteEngines.has(originalKey)) {
+                favoriteEngines.delete(originalKey);
+            }
             await saveData();
             renderEngineList(getCombinedEngines());
             closeModal();
@@ -227,6 +244,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     addEngineBtn.addEventListener('click', () => openModal(false));
     cancelBtn.addEventListener('click', closeModal);
     resetBtn.addEventListener('click', handleReset);
+    deleteBtn.addEventListener('click', handleDelete);
     engineForm.addEventListener('submit', handleFormSubmit);
     urlInput.addEventListener('input', validateUrl);
     modalElement.addEventListener('click', (e) => {
