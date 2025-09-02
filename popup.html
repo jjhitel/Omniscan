@@ -6,15 +6,40 @@
 </head>
 <body>
 
-  <h3 id="popupTitle">Omniscan</h3>
+  <div class="header-container">
+    <h3 data-i18n="appName">Omniscan</h3>
+    <button id="add-engine-btn" data-i18n-title="addEngineTooltip">+</button>
+  </div>
   
   <p id="popupDescription"></p>
-  <p><span id="popupExample"></span> <code>scan eth 0x...</code></p>
+  <p><span data-i18n="popupExample"></span> <code>scan eth 0x...</code></p>
   
   <div class="search-container">
-    <input type="text" id="searchInput" autocomplete="off">
+    <input type="text" id="searchInput" autocomplete="off" data-i18n-placeholder="searchInputPlaceholder">
     <ul id="engine-list">
       </ul>
+  </div>
+
+  <div id="engine-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h4 id="modal-title"></h4>
+      <form id="engine-form">
+        <label for="engine-key" data-i18n="modalLabelTicker"></label>
+        <input type="text" id="engine-key" required autocomplete="off">
+        
+        <label for="engine-name" data-i18n="modalLabelName"></label>
+        <input type="text" id="engine-name" required autocomplete="off">
+
+        <label for="engine-url" data-i18n="modalLabelUrl"></label>
+        <input type="text" id="engine-url" placeholder="https://etherscan.io/search?f=0&q=%s" required autocomplete="off">
+        
+        <div class="modal-actions">
+          <button type="button" id="reset-btn" style="display: none;" data-i18n="modalButtonReset"></button> 
+          <button type="button" id="cancel-btn" data-i18n="modalButtonCancel"></button>
+          <button type="submit" id="save-btn" disabled data-i18n="modalButtonSave"></button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="popup.js"></script>

@@ -12,12 +12,10 @@
         "message": "$engineName$에서 '$query$' 검색",
         "placeholders": {
             "engineName": {
-                "content": "$1",
-                "example": "Etherscan"
+                "content": "$1"
             },
             "query": {
-                "content": "$2",
-                "example": "0x..."
+                "content": "$2"
             }
         }
     },
@@ -27,10 +25,48 @@
     "popupExample": {
         "message": "예:"
     },
-    "dropdownTitle": {
-        "message": "지원하는 전체 목록 보기"
-    },
     "searchInputPlaceholder": {
         "message": "티커 또는 이름으로 검색..."
+    },
+    "addEngineTooltip": {
+        "message": "새 엔진 추가"
+    },
+    "modalTitleAdd": {
+        "message": "새 엔진 추가"
+    },
+    "modalTitleEdit": {
+        "message": "엔진 수정"
+    },
+    "modalLabelTicker": {
+        "message": "티커 (예: eth)"
+    },
+    "modalLabelName": {
+        "message": "이름 (예: Ethereum)"
+    },
+    "modalLabelUrl": {
+        "message": "URL (%s 포함 필수)"
+    },
+    "modalButtonCancel": {
+        "message": "취소"
+    },
+    "modalButtonSave": {
+        "message": "저장"
+    },
+    "modalButtonReset": {
+        "message": "초기화"
+    },
+    "alertTickerExists": {
+        "message": "티커 '$ticker$'가 이미 존재합니다.",
+        "placeholders": {
+            "ticker": {
+                "content": "$1"
+            }
+        }
+    },
+    "editEngineTooltip": {
+        "message": "엔진 수정"
+    },
+    "favoriteEngineTooltip": {
+        "message": "즐겨찾기 전환"
     }
 }

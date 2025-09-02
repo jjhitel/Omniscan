@@ -4,67 +4,90 @@ document.addEventListener('DOMContentLoaded', async() => {
     // --- DOM Elements ---
     const searchInputElement = document.getElementById('searchInput');
     const listElement = document.getElementById('engine-list');
+    const modalElement = document.getElementById('engine-modal');
+    const modalTitleElement = document.getElementById('modal-title');
+    const engineForm = document.getElementById('engine-form');
+    const keyInput = document.getElementById('engine-key');
+    const nameInput = document.getElementById('engine-name');
+    const urlInput = document.getElementById('engine-url');
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const addEngineBtn = document.getElementById('add-engine-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
     let allEngines = [];
+    let customEngines = {};
     let favoriteEngines = new Set();
+    let isEditing = false;
+    let originalKey = '';
 
-    // --- Favorite Management ---
+    // --- Data Management ---
 
-    /**
-     * Load favorites from chrome.storage.
-     */
-    const loadFavorites = async() => {
-        // Defensive check to ensure the storage API is available.
-        // This error typically happens if the "storage" permission is missing
-        // or the extension wasn't reloaded after updating manifest.json.
+    const loadData = async() => {
         if (!chrome.storage || !chrome.storage.local) {
-            console.error("Omniscan: Storage API is not available. Ensure 'storage' permission is in manifest.json and reload the extension.");
+            console.error("Omniscan: Storage API is not available.");
             return;
         }
-        const result = await chrome.storage.local.get(['favorites']);
-        if (result.favorites) {
-            favoriteEngines = new Set(result.favorites);
-        }
+        const result = await chrome.storage.local.get(['favorites', 'customEngines']);
+        favoriteEngines = new Set(result.favorites || []);
+        customEngines = result.customEngines || {};
     };
 
-    /**
-     * Save favorites to chrome.storage.
-     */
-    const saveFavorites = async() => {
-        if (!chrome.storage || !chrome.storage.local) {
-            // Error will be logged by loadFavorites, no need to repeat.
+    const saveData = async() => {
+        if (!chrome.storage || !chrome.storage.local)
             return;
-        }
         await chrome.storage.local.set({
-            favorites: Array.from(favoriteEngines)
+            favorites: Array.from(favoriteEngines),
+            customEngines: customEngines
         });
     };
 
-    /**
-     * Toggle an engine's favorite status.
-     * @param {string} engineKey - The key of the engine to toggle.
-     */
     const toggleFavorite = async(engineKey) => {
         if (favoriteEngines.has(engineKey)) {
             favoriteEngines.delete(engineKey);
         } else {
             favoriteEngines.add(engineKey);
         }
-        await saveFavorites();
-        // Re-render the list with the current search term to reflect the change
-        const searchTerm = searchInputElement.value.toLowerCase().trim();
-        const filteredEngines = allEngines.filter(engine =>
-                engine.key.toLowerCase().includes(searchTerm) ||
-                engine.name.toLowerCase().includes(searchTerm));
-        renderEngineList(filteredEngines);
+        await chrome.storage.local.set({
+            favorites: Array.from(favoriteEngines)
+        });
+        renderEngineList(getCombinedEngines());
     };
 
-    // --- Function to render the list of engines ---
+    // --- UI Rendering ---
+
+    const getCombinedEngines = () => {
+        const mergedEngines = allEngines.map(engine => {
+            if (customEngines[engine.key]) {
+                return {
+                    ...engine,
+                    ...customEngines[engine.key],
+                    isCustomized: true
+                };
+            }
+            return engine;
+        });
+        const newCustomEngines = Object.entries(customEngines)
+            .filter(([key]) => !allEngines.some(e => e.key === key))
+            .map(([key, value]) => ({
+                    key,
+                    ...value,
+                    isCustom: true
+                }));
+        return [...mergedEngines, ...newCustomEngines];
+    };
+
     const renderEngineList = (enginesToRender) => {
-        // Separate engines into two lists: favorites and non-favorites.
+        const fullList = enginesToRender.sort((a, b) => a.key.localeCompare(b.key));
+
+        const searchTerm = searchInputElement.value.toLowerCase().trim();
+        const filteredList = searchTerm ?
+            fullList.filter(engine => engine.key.toLowerCase().includes(searchTerm) || engine.name.toLowerCase().includes(searchTerm)) :
+            fullList;
+
         const favorites = [];
         const nonFavorites = [];
-
-        for (const engine of enginesToRender) {
+        for (const engine of filteredList) {
             if (favoriteEngines.has(engine.key)) {
                 favorites.push(engine);
             } else {
@@ -72,42 +95,26 @@ document.addEventListener('DOMContentLoaded', async() => {
             }
         }
 
-        // Sort only the favorites list alphabetically by key.
-        favorites.sort((a, b) => a.key.localeCompare(b.key));
-
-        // Combine the sorted favorites with the original-ordered non-favorites.
         const sortedEngines = [...favorites, ...nonFavorites];
-
         listElement.innerHTML = '';
+
         for (const engine of sortedEngines) {
             const listItem = document.createElement('li');
+            const editIcon = engine.isCustom ? '&#128221;' : '&#9998;';
+            const editButtonClass = engine.isCustomized ? 'edit-btn modified' : 'edit-btn';
 
-            // Container for clickable engine details
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'engine-details';
-            detailsDiv.dataset.url = engine.url;
-
-            const codeElement = document.createElement('code');
-            codeElement.textContent = engine.key;
-
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'engine-name';
-            nameSpan.textContent = engine.name;
-
-            detailsDiv.appendChild(codeElement);
-            detailsDiv.appendChild(nameSpan);
-
-            // Favorite star
-            const starSpan = document.createElement('span');
-            starSpan.className = 'favorite-star';
-            starSpan.textContent = '★';
-            if (favoriteEngines.has(engine.key)) {
-                starSpan.classList.add('favorited');
-            }
-
-            // --- Event Listeners ---
-            detailsDiv.addEventListener('click', () => {
-                const searchUrl = detailsDiv.dataset.url;
+            listItem.innerHTML = `
+                <div class="engine-details" data-url="${engine.url}">
+                    <code>${engine.key}</code>
+                    <span class="engine-name">${engine.name}</span>
+                </div>
+                <div class="engine-actions">
+                    <span class="${editButtonClass}" title="${chrome.i18n.getMessage('editEngineTooltip')}">${editIcon}</span>
+                    <span class="favorite-star ${favoriteEngines.has(engine.key) ? 'favorited' : ''}" title="${chrome.i18n.getMessage('favoriteEngineTooltip')}">★</span>
+                </div>
+            `;
+            listItem.querySelector('.engine-details').addEventListener('click', () => {
+                const searchUrl = engine.url;
                 if (searchUrl) {
                     const homepage = new URL(searchUrl).origin;
                     chrome.tabs.create({
@@ -116,65 +123,94 @@ document.addEventListener('DOMContentLoaded', async() => {
                     });
                 }
             });
-
-            starSpan.addEventListener('click', () => {
-                toggleFavorite(engine.key);
-            });
-
-            listItem.appendChild(detailsDiv);
-            listItem.appendChild(starSpan);
+            listItem.querySelector('.edit-btn').addEventListener('click', () => openModal(true, engine));
+            listItem.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(engine.key));
             listElement.appendChild(listItem);
         }
     };
 
-    // --- Main Initialization Logic ---
+    // --- Modal Logic ---
 
-    // 1. Localize UI text
-    document.getElementById('popupTitle').innerText = "Omniscan";
+    const validateUrl = () => {
+        const isValid = urlInput.value.includes('%s');
+        saveBtn.disabled = !isValid;
+    };
 
-    // Safely construct the description and handle <br> tags
-    const descriptionMsg = chrome.i18n.getMessage("popupDescription");
-    const descriptionElement = document.getElementById('popupDescription');
-    descriptionElement.innerHTML = ''; // Clear existing content
+    const openModal = (editing = false, engine = {}) => {
+        isEditing = editing;
+        originalKey = engine.key || '';
+        modalTitleElement.textContent = chrome.i18n.getMessage(isEditing ? 'modalTitleEdit' : 'modalTitleAdd');
+        keyInput.value = engine.key || '';
+        nameInput.value = engine.name || '';
+        urlInput.value = engine.url || '';
+        keyInput.disabled = isEditing;
 
-    const mainParts = descriptionMsg.split(/<code>|<\/code>/);
+        const isDefaultEngine = allEngines.some(e => e.key === originalKey);
+        resetBtn.style.display = (isEditing && isDefaultEngine && customEngines[originalKey]) ? 'block' : 'none';
 
-    // Part before <code>
-    const beforeCode = mainParts[0];
-    const brPartsBefore = beforeCode.split(/<br>/i);
-    brPartsBefore.forEach((part, index) => {
-        descriptionElement.append(part);
-        if (index < brPartsBefore.length - 1) {
-            descriptionElement.appendChild(document.createElement('br'));
+        modalElement.style.display = 'flex';
+        validateUrl();
+    };
+
+    const closeModal = () => {
+        engineForm.reset();
+        modalElement.style.display = 'none';
+    };
+
+    const handleFormSubmit = async(event) => {
+        event.preventDefault();
+        const newKey = keyInput.value.toLowerCase().trim();
+        if (!newKey)
+            return;
+
+        if (!isEditing && getCombinedEngines().some(e => e.key === newKey)) {
+            alert(chrome.i18n.getMessage('alertTickerExists', newKey));
+            return;
         }
-    });
 
-    // The <code> part
-    if (mainParts.length > 1) {
-        const codeTag = document.createElement('code');
-        codeTag.textContent = 'scan'; // Assuming it's always 'scan'
-        descriptionElement.appendChild(codeTag);
-    }
+        customEngines[newKey] = {
+            name: nameInput.value.trim(),
+            url: urlInput.value.trim()
+        };
 
-    // Part after </code>
-    if (mainParts.length > 2) {
-        const afterCode = mainParts[2];
-        const brPartsAfter = afterCode.split(/<br>/i);
-        brPartsAfter.forEach((part, index) => {
-            descriptionElement.append(part);
-            if (index < brPartsAfter.length - 1) {
-                descriptionElement.appendChild(document.createElement('br'));
-            }
+        await saveData();
+        renderEngineList(getCombinedEngines());
+        closeModal();
+    };
+
+    const handleReset = async() => {
+        if (customEngines[originalKey]) {
+            delete customEngines[originalKey];
+            await saveData();
+            renderEngineList(getCombinedEngines());
+            closeModal();
+        }
+    };
+
+    // --- Main Initialization & Localization ---
+
+    const localizePage = () => {
+        document.querySelectorAll('[data-i18n]').forEach(elem => {
+            const messageKey = elem.getAttribute('data-i18n');
+            elem.textContent = chrome.i18n.getMessage(messageKey);
         });
-    }
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
+            const messageKey = elem.getAttribute('data-i18n-placeholder');
+            elem.placeholder = chrome.i18n.getMessage(messageKey);
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach(elem => {
+            const messageKey = elem.getAttribute('data-i18n-title');
+            elem.title = chrome.i18n.getMessage(messageKey);
+        });
 
-    document.getElementById('popupExample').innerText = chrome.i18n.getMessage("popupExample");
-    searchInputElement.placeholder = chrome.i18n.getMessage("searchInputPlaceholder");
+        const descriptionElement = document.getElementById('popupDescription');
+        descriptionElement.innerHTML = chrome.i18n.getMessage("popupDescription");
+    };
 
-    // 2. Load favorites before fetching engines
-    await loadFavorites();
+    localizePage();
 
-    // 3. Fetch engine data from the JSON file
+    await loadData();
+
     try {
         const url = chrome.runtime.getURL('engines.json');
         const response = await fetch(url);
@@ -182,18 +218,19 @@ document.addEventListener('DOMContentLoaded', async() => {
     } catch (error) {
         console.error("Omniscan: Failed to load engines.json", error);
         listElement.innerHTML = `<li>Error loading search engines.</li>`;
-        return; // Stop execution if the file fails to load
+        return;
     }
 
-    // 4. Render the initial full list
-    renderEngineList(allEngines);
+    renderEngineList(getCombinedEngines());
 
-    // 5. Set up search input event listener
-    searchInputElement.addEventListener('input', (event) => {
-        const searchTerm = event.target.value.toLowerCase().trim();
-        const filteredEngines = allEngines.filter(engine =>
-                engine.key.toLowerCase().includes(searchTerm) ||
-                engine.name.toLowerCase().includes(searchTerm));
-        renderEngineList(filteredEngines);
+    searchInputElement.addEventListener('input', () => renderEngineList(getCombinedEngines()));
+    addEngineBtn.addEventListener('click', () => openModal(false));
+    cancelBtn.addEventListener('click', closeModal);
+    resetBtn.addEventListener('click', handleReset);
+    engineForm.addEventListener('submit', handleFormSubmit);
+    urlInput.addEventListener('input', validateUrl);
+    modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement)
+            closeModal();
     });
 });

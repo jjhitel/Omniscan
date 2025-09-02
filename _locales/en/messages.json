@@ -12,17 +12,12 @@
         "message": "Search for '$query$' on $engineName$",
         "placeholders": {
             "engineName": {
-                "content": "$1",
-                "example": "Etherscan"
+                "content": "$1"
             },
             "query": {
-                "content": "$2",
-                "example": "0x..."
+                "content": "$2"
             }
         }
-    },
-    "popupTitle": {
-        "message": "Omniscan"
     },
     "popupDescription": {
         "message": "Type <code>scan</code> in the address bar, <br>then a chain ticker and an address."
@@ -30,10 +25,48 @@
     "popupExample": {
         "message": "Example:"
     },
-    "dropdownTitle": {
-        "message": "View all supported explorers"
-    },
     "searchInputPlaceholder": {
         "message": "Search by ticker or name..."
+    },
+    "addEngineTooltip": {
+        "message": "Add new engine"
+    },
+    "modalTitleAdd": {
+        "message": "Add New Engine"
+    },
+    "modalTitleEdit": {
+        "message": "Edit Engine"
+    },
+    "modalLabelTicker": {
+        "message": "Ticker (e.g., eth)"
+    },
+    "modalLabelName": {
+        "message": "Name (e.g., Ethereum)"
+    },
+    "modalLabelUrl": {
+        "message": "URL (must include %s)"
+    },
+    "modalButtonCancel": {
+        "message": "Cancel"
+    },
+    "modalButtonSave": {
+        "message": "Save"
+    },
+    "modalButtonReset": {
+        "message": "Reset"
+    },
+    "alertTickerExists": {
+        "message": "Ticker '$ticker$' already exists.",
+        "placeholders": {
+            "ticker": {
+                "content": "$1"
+            }
+        }
+    },
+    "editEngineTooltip": {
+        "message": "Edit Engine"
+    },
+    "favoriteEngineTooltip": {
+        "message": "Toggle Favorite"
     }
 }

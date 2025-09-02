@@ -3,49 +3,42 @@
 let SEARCH_ENGINES = {};
 let FAVORITE_ENGINES = new Set();
 
-/**
- * Loads the search engine configuration from engines.json.
- */
 async function loadEngines() {
-    if (Object.keys(SEARCH_ENGINES).length > 0)
-        return;
-
     try {
+        // Fetch default engines from JSON
         const url = chrome.runtime.getURL('engines.json');
         const response = await fetch(url);
-        const data = await response.json();
+        const defaultEngines = await response.json();
+
         const engineMap = new Map();
-        for (const engine of data) {
-            // Validate required fields and URL placeholder.
-            if (!engine.key || !engine.name || !engine.url) {
-                console.warn("Omniscan: Skipping invalid engine entry missing required fields:", engine);
-                continue;
-            }
-
-            if (!engine.url.includes('%s')) {
-                console.warn("Omniscan: Skipping engine with invalid URL (missing %s placeholder):", engine);
-                continue;
-            }
-
-            const key = engine.key.toLowerCase();
-            if (!engineMap.has(key)) {
-                // Store tickers in lowercase for case-insensitive matching.
-                engineMap.set(key, {
+        for (const engine of defaultEngines) {
+            if (engine.key && engine.name && engine.url && engine.url.includes('%s')) {
+                engineMap.set(engine.key.toLowerCase(), {
                     name: engine.name,
                     url: engine.url
                 });
             }
         }
+
+        // Fetch and merge custom engines from storage
+        const storageData = await chrome.storage.local.get(['customEngines']);
+        const customEngines = storageData.customEngines || {};
+        for (const [key, value] of Object.entries(customEngines)) {
+            if (key && value.name && value.url && value.url.includes('%s')) {
+                engineMap.set(key.toLowerCase(), {
+                    name: value.name,
+                    url: value.url
+                });
+            }
+        }
+
         SEARCH_ENGINES = Object.fromEntries(engineMap);
-        console.log("Omniscan: Search engines loaded successfully.");
+        console.log("Omniscan: All engines loaded successfully.");
     } catch (error) {
-        console.error("Omniscan: Failed to load search engines:", error);
+        console.error("Omniscan: Failed to load engines:", error);
     }
 }
 
-/**
- * Load favorites from chrome.storage.
- */
 const loadFavorites = async() => {
     if (!chrome.storage || !chrome.storage.local) {
         console.error("Omniscan: Storage API is not available.");
@@ -57,19 +50,22 @@ const loadFavorites = async() => {
     }
 };
 
-// --- Initial Loading ---
+// --- Initial Loading & Listeners ---
 (async() => {
     await loadEngines();
     await loadFavorites();
 })();
 
-// --- Event Listeners ---
-
-// Listen for changes in storage to keep favorites up-to-date.
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local' && changes.favorites) {
-        FAVORITE_ENGINES = new Set(changes.favorites.newValue || []);
-        console.log("Omniscan: Favorites updated in background.");
+    if (namespace === 'local') {
+        if (changes.favorites) {
+            FAVORITE_ENGINES = new Set(changes.favorites.newValue || []);
+            console.log("Omniscan: Favorites updated in background.");
+        }
+        if (changes.customEngines) {
+            console.log("Omniscan: Custom engines updated, reloading all engines.");
+            loadEngines();
+        }
     }
 });
 
@@ -77,6 +73,7 @@ chrome.runtime.onInstalled.addListener(() => {
     loadEngines();
     loadFavorites();
 });
+
 chrome.runtime.onStartup.addListener(() => {
     loadEngines();
     loadFavorites();
