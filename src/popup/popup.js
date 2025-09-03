@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async() => {
         renderEngineList(getCombinedEngines());
     };
 
-    // --- UI Rendering ---
+    // --- UI Rendering (Refactored to avoid innerHTML) ---
 
     const getCombinedEngines = () => {
         // Merges default and custom engines for rendering.
@@ -100,22 +100,16 @@ document.addEventListener('DOMContentLoaded', async() => {
         const favorites = filteredList.filter(e => favoriteEngines.has(e.key));
         const nonFavorites = filteredList.filter(e => !favoriteEngines.has(e.key));
 
-        listElement.innerHTML = '';
+        listElement.innerHTML = ''; // Clear list before re-rendering
         [...favorites, ...nonFavorites].forEach(engine => {
             const listItem = document.createElement('li');
             const isModified = engine.isCustom || engine.isCustomized;
 
-            listItem.innerHTML = `
-                <div class="engine-details" data-url="${engine.url}">
-                    <code class="${isModified ? 'modified-ticker' : ''}">${engine.key}</code>
-                    <span class="engine-name">${engine.name}</span>
-                </div>
-                <div class="engine-actions">
-                    <span class="edit-btn" title="${chrome.i18n.getMessage('editEngineTooltip')}">&#9998;</span>
-                    <span class="favorite-star ${favoriteEngines.has(engine.key) ? 'favorited' : ''}" title="${chrome.i18n.getMessage('favoriteEngineTooltip')}">★</span>
-                </div>`;
-
-            listItem.querySelector('.engine-details').addEventListener('click', () => {
+            // Create engine details container
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'engine-details';
+            detailsDiv.dataset.url = engine.url;
+            detailsDiv.addEventListener('click', () => {
                 try {
                     const homepage = new URL(engine.url).origin;
                     chrome.tabs.create({
@@ -126,8 +120,47 @@ document.addEventListener('DOMContentLoaded', async() => {
                     console.error("Invalid URL:", e);
                 }
             });
-            listItem.querySelector('.edit-btn').addEventListener('click', () => openModal(true, engine));
-            listItem.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(engine.key));
+
+            // Create and append code element for ticker
+            const codeEl = document.createElement('code');
+            if (isModified) {
+                codeEl.className = 'modified-ticker';
+            }
+            codeEl.textContent = engine.key;
+            detailsDiv.appendChild(codeEl);
+
+            // Create and append span for engine name
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'engine-name';
+            nameSpan.textContent = engine.name;
+            detailsDiv.appendChild(nameSpan);
+
+            // Create actions container
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'engine-actions';
+
+            // Create edit button
+            const editSpan = document.createElement('span');
+            editSpan.className = 'edit-btn';
+            editSpan.title = chrome.i18n.getMessage('editEngineTooltip');
+            editSpan.textContent = '✏️'; // Using a direct emoji is safe
+            editSpan.addEventListener('click', () => openModal(true, engine));
+            actionsDiv.appendChild(editSpan);
+
+            // Create favorite star
+            const starSpan = document.createElement('span');
+            starSpan.className = 'favorite-star';
+            if (favoriteEngines.has(engine.key)) {
+                starSpan.classList.add('favorited');
+            }
+            starSpan.title = chrome.i18n.getMessage('favoriteEngineTooltip');
+            starSpan.textContent = '★';
+            starSpan.addEventListener('click', () => toggleFavorite(engine.key));
+            actionsDiv.appendChild(starSpan);
+
+            // Append all parts to the list item
+            listItem.appendChild(detailsDiv);
+            listItem.appendChild(actionsDiv);
             listElement.appendChild(listItem);
         });
     };
@@ -150,23 +183,30 @@ document.addEventListener('DOMContentLoaded', async() => {
 
     const renderHistoryList = () => {
         // Renders the search history list.
-        historyListElement.innerHTML = '';
+        historyListElement.innerHTML = ''; // Clear list before re-rendering
         if (searchHistory.length === 0) {
-            historyListElement.innerHTML = `<li style="justify-content: center;">${chrome.i18n.getMessage('noHistory')}</li>`;
+            const li = document.createElement('li');
+            li.style.justifyContent = 'center';
+            li.textContent = chrome.i18n.getMessage('noHistory');
+            historyListElement.appendChild(li);
             return;
         }
 
         searchHistory.forEach(item => {
             const li = document.createElement('li');
-            li.dataset.fullText = item; // Store the original text
-            li.innerHTML = `<span class="history-item-text">${formatHistoryItem(item)}</span>`;
+            li.dataset.fullText = item;
+
+            const span = document.createElement('span');
+            span.className = 'history-item-text';
+            span.textContent = formatHistoryItem(item);
+            li.appendChild(span);
+
             li.addEventListener('click', () => {
-                // Send a message to the background script to execute the search
                 chrome.runtime.sendMessage({
                     action: "executeSearch",
                     searchText: item
                 });
-                window.close(); // Close the popup
+                window.close();
             });
             historyListElement.appendChild(li);
         });
@@ -175,14 +215,14 @@ document.addEventListener('DOMContentLoaded', async() => {
     // --- View Switching ---
     const showMainView = () => {
         historyView.style.display = 'none';
-        mainView.style.display = 'flex'; // Use 'flex' to match CSS and maintain layout
+        mainView.style.display = 'flex';
     };
 
     const showHistoryView = async() => {
-        await loadData(); // Always get the latest history
+        await loadData();
         renderHistoryList();
         mainView.style.display = 'none';
-        historyView.style.display = 'flex'; // Use 'flex' to match CSS and maintain layout
+        historyView.style.display = 'flex';
     };
 
     // --- Modal Logic ---
@@ -285,7 +325,44 @@ document.addEventListener('DOMContentLoaded', async() => {
         document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = chrome.i18n.getMessage(el.dataset.i18n));
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = chrome.i18n.getMessage(el.dataset.i18nPlaceholder));
         document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = chrome.i18n.getMessage(el.dataset.i18nTitle));
-        document.getElementById('popupDescription').innerHTML = chrome.i18n.getMessage("popupDescription");
+
+        // Safely construct the popupDescription element
+        const descriptionElement = document.getElementById('popupDescription');
+        const message = chrome.i18n.getMessage("popupDescription");
+
+        // We will split this into parts and create elements for each.
+        const codeRegex = /<code>(.*?)<\/code>/;
+        const brRegex = /<br>/;
+
+        const codeMatch = message.match(codeRegex);
+
+        // Clear any previous content
+        descriptionElement.innerHTML = '';
+
+        if (codeMatch) {
+            const beforeCode = message.substring(0, codeMatch.index);
+            const codeContent = codeMatch[1];
+            const afterCode = message.substring(codeMatch.index + codeMatch[0].length);
+
+            // Append the text before the <code> tag
+            descriptionElement.append(document.createTextNode(beforeCode));
+
+            // Create and append the <code> element
+            const codeElement = document.createElement('code');
+            codeElement.textContent = codeContent;
+            descriptionElement.appendChild(codeElement);
+
+            // Handle the text after the </code>, which might contain a <br>
+            const afterParts = afterCode.split(brRegex);
+            descriptionElement.append(document.createTextNode(afterParts[0]));
+            if (afterParts.length > 1) {
+                descriptionElement.appendChild(document.createElement('br'));
+                descriptionElement.append(document.createTextNode(afterParts[1]));
+            }
+        } else {
+            // Fallback for simple text without HTML
+            descriptionElement.textContent = message;
+        }
     };
 
     const init = async() => {
@@ -298,7 +375,9 @@ document.addEventListener('DOMContentLoaded', async() => {
             allEngines = await response.json();
         } catch (error) {
             console.error("Omniscan: Failed to load engines.json", error);
-            listElement.innerHTML = `<li>Error loading search engines.</li>`;
+            const errorLi = document.createElement('li');
+            errorLi.textContent = 'Error loading search engines.';
+            listElement.appendChild(errorLi);
             return;
         }
         renderEngineList(getCombinedEngines());
