@@ -81,7 +81,7 @@
     }, {
         "key": "near",
         "name": "NEAR Protocol",
-        "url": "https://explorer.near.org/search?keyword=%s"
+        "url": "https://nearblocks.io/search?f=0&q=%s"
     }, {
         "key": "atom",
         "name": "Cosmos Hub",
