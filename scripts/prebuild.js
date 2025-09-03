@@ -3,12 +3,16 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-console.log('Synchronizing versions...');
+console.log('Synchronizing manifest versions...');
 
 // --- Define Paths ---
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const manifestPath = path.join(__dirname, '..', 'src', 'manifest.json');
+const srcPath = path.join(__dirname, '..', 'src');
+const manifestPaths = [
+    path.join(srcPath, 'manifest.chrome.json'),
+    path.join(srcPath, 'manifest.firefox.json')
+];
 
 // --- Read package.json to get the version ---
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -19,16 +23,21 @@ if (!version) {
     process.exit(1);
 }
 
-// --- Read manifest.json, update its version, and write it back ---
-const manifestJson = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+// --- Update version in all manifest files ---
+manifestPaths.forEach(manifestPath => {
+    if (fs.existsSync(manifestPath)) {
+        const manifestJson = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
-// Update the version only if it's different to avoid unnecessary file writes
-if (manifestJson.version !== version) {
-    console.log(`Updating manifest.json version from ${manifestJson.version} to ${version}...`);
-    manifestJson.version = version;
-    fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, 4), 'utf8');
-} else {
-    console.log('Versions are already in sync.');
-}
+        if (manifestJson.version !== version) {
+            console.log(`Updating ${path.basename(manifestPath)} version from ${manifestJson.version} to ${version}...`);
+            manifestJson.version = version;
+            fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, 4), 'utf8');
+        } else {
+            console.log(`${path.basename(manifestPath)} version is already in sync.`);
+        }
+    } else {
+        console.warn(`⚠️ Manifest file not found at: ${manifestPath}`);
+    }
+});
 
 console.log('✅ Version synchronization complete.');
